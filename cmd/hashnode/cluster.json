@@ -1,0 +1,1 @@
+{"nodes":[{"id":"node1","addr":"localhost:8001","http_port":8001},{"id":"node2","addr":"localhost:8002","http_port":8002},{"id":"node3","addr":"localhost:8003","http_port":8003},{"id":"node4","addr":"localhost:8004","http_port":8004}]}
