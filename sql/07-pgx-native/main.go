@@ -115,7 +115,7 @@ func main() {
 
 	// pgconn 层可以获取命令状态标签
 	var pgConn *pgconn.PgConn = conn.PgConn()
-	fmt.Printf("  连接状态: %s\n", pgConn.IsClosed())
+	fmt.Printf("  连接状态: %t\n", pgConn.IsClosed())
 
 	// ---- 清理 ----
 	mustExecPool(ctx, pool, "DROP TABLE IF EXISTS pgx_demo;")
