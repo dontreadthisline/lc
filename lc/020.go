@@ -52,14 +52,14 @@ func IssValid(s string) bool {
 	n := len(s)
 	stack := make([]byte,n)
 	pair := map[byte]byte{
-		'[':']',
-		'(':')',
-		'{':'}',
+		']':'[',
+		')':'(',
+		'}':'{',
 	}
 	for i := range n {
 		c := s[i]
 		switch c {
-		case '[','{','(':
+		case ']','}',')':
 			l := len(stack)
 			if l <= 0 {
 				return false

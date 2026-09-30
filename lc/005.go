@@ -1,6 +1,6 @@
 package lc
 
-func longestPalindromicSubStr(s string) string {
+func LongestPalindromicSubStr(s string) string {
 	//暴力方法 o(n^3)
 	palindromic := func(i, j int) bool {
 		for ; i < j; i, j = i+1, j-1 {
