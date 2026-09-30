@@ -27,11 +27,12 @@ package lc
 - l1 和 l2 均按 非递减顺序 排列
 */
 
-func mergeTwoLists(list1 *ListNode, list2 *ListNode) *ListNode {
+func MergeTwoLists(list1 *ListNode, list2 *ListNode) *ListNode {
 	head := &ListNode{}
 	node := head
 
 	for list1 != nil && list2 != nil {
+
 		if list1.Val < list2.Val {
 			node.Next = list1
 			list1 = list1.Next

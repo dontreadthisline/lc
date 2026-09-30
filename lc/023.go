@@ -1,5 +1,7 @@
 package lc
 
+import "demo/algo"
+
 /*
 给你一个链表数组，每个链表都已经按升序排列。
 
@@ -43,6 +45,20 @@ package lc
 - lists[i].length 的总和不超过 10^4
 */
 
-func mergeKLists(lists []*ListNode) *ListNode {
-	panic("TODO")
+func MergeKLists(lists []*ListNode) *ListNode {
+	less := func (n1,n2 *ListNode) bool {
+		return n1.Val < n2.Val
+	}
+	h := algo.NewHeap(less)
+	dummy := &ListNode{}
+	cur := dummy
+	for h.Len() > 0 {
+		node := h.Pop()
+		if node.Next != nil {
+			h.Push(node.Next)
+		}
+		cur.Next = node
+		cur = cur.Next
+	}
+	return dummy.Next
 }

@@ -22,7 +22,7 @@ package lc
 */
 
 func MaximumPopulation(logs [][]int) int {
-	diff ,base:= make([]int, 101),1950
+	diff, base := make([]int, 101), 1950
 
 	for _, log := range logs {
 		diff[log[0]-base] += 1
@@ -42,13 +42,13 @@ func MaximumPopulation(logs [][]int) int {
 }
 
 func MaximumPopulationBruteForce(logs [][]int) int {
-	max,year := 0,0
+	max, year := 0, 0
 	var sum int
 	for i := 1950; i <= 2050; i++ {
 		sum = 0
 		//一样的,都是把内层循环转成差分数组
-		for _,log := range logs {
-			if log[0] <= i && i  < log[1] {
+		for _, log := range logs {
+			if log[0] <= i && i < log[1] {
 				sum += 1
 			}
 		}

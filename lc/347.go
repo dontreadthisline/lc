@@ -34,6 +34,20 @@ package lc
 进阶：你所设计算法的时间复杂度 必须 优于 O(n log n) ，其中 n* *是数组大小。
 */
 
-func topKFrequent(nums []int, k int) []int {
-	panic("TODO")
+func TopKFrequent(nums []int, k int) []int {
+	m := make(map[int]int,len(nums))
+	for _,num := range nums {
+		m[num] += 1
+	}
+	bucket := make([][]int,len(nums)+1)
+	for k,v := range m {
+		bucket[v] = append(bucket[v],k)
+	}
+	res,cnt := make([]int,0,k+2),0
+	for i := len(nums); cnt < k && i >= 0; i--{
+		if len(bucket[i]) > 0 {
+			res = append(res,bucket[i]...)
+		}
+	}
+	return res[:k]
 }

@@ -36,24 +36,22 @@ package lc
 进阶：你是否可以使用 O(1) 空间解决此题？
 */
 
-func detectCycle(head *ListNode) *ListNode {
-
-	fast,slow := head,head
-	for ; fast != nil && slow != nil; slow = slow.Next {
+func DetectCycle(head *ListNode) *ListNode {
+	fast, slow := head, head
+	for fast != nil && fast.Next != nil {
+		fast = fast.Next.Next
+		slow = slow.Next
 		if fast == slow {
 			return fast
-		}
-		if fast.Next != nil {
-			fast = fast.Next.Next //fast每次走两步
 		}
 	}
 	return nil
 }
 
-func detectCycleHashWay(head *ListNode) *ListNode {
-	m := make(map[*ListNode]struct{},0)
-	for ;head != nil; head = head.Next {
-		if _,ok := m[head];ok {
+func DetectCycleHashWay(head *ListNode) *ListNode {
+	m := make(map[*ListNode]struct{}, 0)
+	for ; head != nil; head = head.Next {
+		if _, ok := m[head]; ok {
 			return head
 		}
 		m[head] = struct{}{}

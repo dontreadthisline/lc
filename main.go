@@ -12,9 +12,9 @@ type Bar struct {
 }
 
 func main() {
-	var nums []int
-	nums = nil
-	fmt.Println(nums)
-	nums = append(nums,1)
-	fmt.Println(nums)
+	a := 123
+	b := 2
+	c := 123
+	fmt.Println(a ^ c)
+	fmt.Println(a  ^ b)
 }

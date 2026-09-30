@@ -26,7 +26,7 @@ package lc
 //
 
 func IsCovered(ranges [][]int, left int, right int) bool {
-	diff ,val:= make([]int, 52),0
+	diff, val := make([]int, 52), 0
 
 	for _, rg := range ranges {
 		diff[rg[0]] += 1

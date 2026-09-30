@@ -1,5 +1,11 @@
 package lc
 
+import (
+	"fmt"
+	"slices"
+	"strings"
+)
+
 /*
 给定一组非负整数 nums，重新排列每个数的顺序（每个数不可拆分）使之组成一个最大的整数。
 
@@ -22,6 +28,14 @@ package lc
 - 0 <= nums[i] <= 10^9
 */
 
-func largestNumber(nums []int) string {
-	panic("TODO")
+func LargestNumber(nums []int) string {
+	slices.SortFunc(nums,func(a,b int) int {
+		s1,s2 := fmt.Sprintf("%d",a),fmt.Sprintf("%d", b)
+		return -strings.Compare(s1,s2)
+	})
+	sb := strings.Builder{}
+	for _,num :=range nums {
+		sb.WriteString(fmt.Sprintf("%d", num))
+	}
+	return sb.String()
 }

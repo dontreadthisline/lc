@@ -77,7 +77,7 @@ func GetIntersectionNodeHashWay(headA *ListNode, headB *ListNode) *ListNode {
 		m[headA] = struct{}{}
 	}
 	for ; headB != nil; headB = headB.Next {
-		if _,ok := m[headB]; ok {
+		if _, ok := m[headB]; ok {
 			return headB
 		}
 	}

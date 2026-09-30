@@ -43,25 +43,36 @@ circularQueue.Rear();  // 返回 4
 - 请不要使用内置的队列库。
 */
 
-// 注意: 构造器按仓库惯例改名 NewXxx（同包内多个 Constructor 会重名冲突）
 type MyCircularQueue struct {
-	// TODO
+	ring []int
+	first int
+	last int
+	capacity int
 }
 
 func NewMyCircularQueue(k int) *MyCircularQueue {
-	panic("TODO")
+	return &MyCircularQueue{
+		ring:make([]int,k),
+		first:0,
+		last:0,
+		capacity:k,
+	}
 }
 
 func (q *MyCircularQueue) Front() int {
-	panic("TODO")
+	return q.ring[q.first]
 }
 
 func (q *MyCircularQueue) Rear() int {
-	panic("TODO")
+	return q.ring[q.last]
 }
 
 func (q *MyCircularQueue) EnQueue(value int) bool {
-	panic("TODO")
+	if q.IsFull() {
+		return false
+	}
+	//more op in here
+	return true
 }
 
 func (q *MyCircularQueue) DeQueue() bool {
@@ -69,9 +80,9 @@ func (q *MyCircularQueue) DeQueue() bool {
 }
 
 func (q *MyCircularQueue) IsEmpty() bool {
-	panic("TODO")
+	return q.first == q.last
 }
 
 func (q *MyCircularQueue) IsFull() bool {
-	panic("TODO")
+	return false
 }

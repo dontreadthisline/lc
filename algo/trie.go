@@ -58,7 +58,7 @@ func dfs(t *Trie, word []byte, collect CollectFunc) {
 	}
 }
 
-func startWith(t *Trie, prefix string) ([]string, []int) {
+func StartWith(t *Trie, prefix string) ([]string, []int) {
 	words := []string{}
 	vals := []int{}
 	collect := func(word string, node *Trie) {
@@ -68,4 +68,16 @@ func startWith(t *Trie, prefix string) ([]string, []int) {
 	node := search(t, prefix)
 	dfs(node, []byte(prefix), collect)
 	return words, vals
+}
+
+func Search(t *Trie,word string) (bool,int) {
+	node := search(t,word)
+	if node != nil {
+		return node.end,node.val
+	}
+	return false,0
+}
+
+func Insert(t *Trie,word string,val int) {
+	insert(t,word,val)
 }

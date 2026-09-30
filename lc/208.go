@@ -39,23 +39,52 @@ trie.search("app");     // 返回 True
 - insert、search 和 startsWith 调用次数 总计 不超过 3 * 10^4 次
 */
 
-// 注意: 构造器按仓库惯例改名 NewXxx（同包内多个 Constructor 会重名冲突）
+//Trie trie节点
 type Trie struct {
-	// TODO
+	children [26]*Trie
+	end bool
 }
 
 func NewTrie() *Trie {
-	panic("TODO")
+	return &Trie{}
 }
 
 func (t *Trie) Insert(word string) {
-	panic("TODO")
+	insert(t,word)
 }
 
+
 func (t *Trie) Search(word string) bool {
-	panic("TODO")
+	node := search(t,word)
+	return node != nil && node.end
 }
 
 func (t *Trie) StartsWith(prefix string) bool {
-	panic("TODO")
+	node := search(t, prefix )
+	return node != nil
+}
+
+func insert(t *Trie,word string) {
+	if word == "" {
+		return
+	}
+	for i := range len(word) {
+		c := word[i]
+		if t.children[c] == nil {
+			t.children[c] = new(Trie)
+		}
+		t = t.children[c]
+	}
+
+	t.end = true
+}
+
+func search(t *Trie, word string) *Trie {
+	for i := range len(word) {
+		if t == nil  || t.children[word[i]] == nil {
+			return nil
+		}
+		t = t.children[word[i]]
+	}
+	return t
 }

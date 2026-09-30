@@ -37,22 +37,26 @@ package lc
 */
 
 func HasCycle(head *ListNode) bool {
-
-	fast,slow := head,head
-	for ;fast.Next != nil && slow != nil; slow = slow.Next {
+	//如果指示判断有无环,那么快慢指针足够，因为进入圈以后,一定会相遇
+	fast, slow := head, head
+	//先修panic,先判slow再判fast
+	for fast != nil && fast.Next != nil {
+		fast = fast.Next.Next
+		slow = slow.Next
+		//先移动再判相等,避免初始化判断成了head
 		if fast == slow {
 			return true
 		}
-		fast = fast.Next.Next
 	}
+	//能走到链表尾部,无环
 	return false
 }
 
 func HasCycleHashWay(head *ListNode) bool {
-	m := make(map[*ListNode]struct{},0)
+	m := make(map[*ListNode]struct{}, 0)
 
-	for ; head != nil ; head = head.Next {
-		if _,ok := m[head]; ok {
+	for ; head != nil; head = head.Next {
+		if _, ok := m[head]; ok {
 			return true
 		}
 		m[head] = struct{}{}

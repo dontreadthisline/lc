@@ -18,9 +18,9 @@ func (l *ListNode) String() string {
 	buf := strings.Builder{}
 	for ; l != nil; l = l.Next {
 		if l.Next == nil {
-			buf.WriteString(fmt.Sprintf("%d",l.Val))
+			buf.WriteString(fmt.Sprintf("%d", l.Val))
 		} else {
-			buf.WriteString(fmt.Sprintf("%d->",l.Val))
+			buf.WriteString(fmt.Sprintf("%d->", l.Val))
 		}
 	}
 	return buf.String()
@@ -32,9 +32,9 @@ func NewLinkList(vals []int) *ListNode {
 	}
 	dummy := ListNode{}
 	tmp := &dummy
-	for _,val := range vals {
+	for _, val := range vals {
 		node := ListNode{
-			Val:val,
+			Val: val,
 		}
 		tmp.Next = &node
 		tmp = tmp.Next
@@ -43,7 +43,7 @@ func NewLinkList(vals []int) *ListNode {
 	return dummy.Next
 }
 
-//TreeNode 二叉树节点
+// TreeNode 二叉树节点
 type TreeNode struct {
 	Val   int
 	Left  *TreeNode

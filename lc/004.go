@@ -5,6 +5,25 @@ import (
 	"slices"
 )
 
+// ============================================================
+// 0004. 寻找两个正序数组的中位数（困难）
+// 题面: ../mother-problems/0004-寻找两个正序数组的中位数.md
+// 链接: https://leetcode.cn/problems/median-of-two-sorted-arrays/
+// ============================================================
+
+/*
+给定两个大小分别为 m 和 n 的正序（从小到大）数组 nums1 和 nums2。
+请你找出并返回这两个正序数组的中位数。算法时间复杂度应该为 O(log (m+n))。
+
+示例 1：nums1 = [1,3], nums2 = [2] → 2.00000（合并后 [1,2,3]）
+示例 2：nums1 = [1,2], nums2 = [3,4] → 2.50000（合并后 [1,2,3,4]）
+
+提示：
+- 0 <= m, n <= 1000，1 <= m + n <= 2000
+- -10^6 <= nums1[i], nums2[i] <= 10^6
+- 进阶：O(log(m+n))。下方归并版是 O(m+n) 教学起点，二分切分版是目标形态
+*/
+
 func FindMedian(nums1, nums2 []int) float64 {
 	return FindMedianMergeSortAlgs(nums1, nums2)
 }
@@ -30,8 +49,7 @@ func FindMedianMergeSortAlgs(nums1, nums2 []int) float64 {
 			j += 1
 		}
 	}
-	// 1,3=> 0,1
-	// 2,4=> 1,2
+
 	mid := (m + n) / 2
 	if (m+n)%2 == 1 {
 		return float64(nums[mid])
@@ -68,7 +86,8 @@ func FindMedianMergeSortAlgs(nums1, nums2 []int) float64 {
 //	nums2[j-1] > nums1[i] → nums1 拿少了（nums2 的第 j 个替它顶在前头）→ lo = i+1
 //
 // 两个都不违反 → 恰好：左半恰是全局最小的 k 个，中位数从切分线两侧读出
-func findMedianBinarySearchAlgs(nums1, nums2 []int) float64 {
+
+func FindMedianBinarySearchAlgs(nums1, nums2 []int) float64 {
 	m, n := len(nums1), len(nums2)
 	if m > n {
 		m, n = n, m
@@ -109,6 +128,11 @@ func findMedianBinarySearchAlgs(nums1, nums2 []int) float64 {
 	return 0 // 理论不可达：合法切分必存在于 [0, m]
 }
 
+// ============================================================
+// 0704. 二分查找（简单）
+// 题面: ../mother-problems/0704-二分查找.md
+// 链接: https://leetcode.cn/problems/binary-search/
+// ============================================================
 /*
 * 二分查找 —— 裸模板，一切二分的祖先
 
@@ -153,6 +177,11 @@ func BinarySearch(nums []int, target int) int {
 	return -1
 }
 
+// ============================================================
+// 0034. 在排序数组中查找元素的第一个和最后一个位置（中等）
+// 题面: ../mother-problems/0034-在排序数组中查找元素的第一个和最后一个位置.md
+// 链接: https://leetcode.cn/problems/find-first-and-last-position-of-element-in-sorted-array/
+// ============================================================
 /*
 34. 排序数组中查找元素的第一个和最后一个位置
 
@@ -190,11 +219,11 @@ func BinarySearch(nums []int, target int) int {
 */
 
 func SearchRange(nums []int, target int) []int {
-	first := lowerBound(nums, target)
+	first := LowerBound(nums, target)
 	if first >= len(nums) || nums[first] != target {
 		return []int{-1, -1}
 	}
-	last := lowerBound(nums, target+1) - 1
+	last := LowerBound(nums, target+1) - 1
 	return []int{first, last}
 }
 
@@ -208,7 +237,8 @@ func SearchRange(nums []int, target int) []int {
 //
 // 对照 004：最后那个 TODO 循环里 r=i-1 / l=i+1 的三分支，本质是
 // "704 的命中分支"换成了"两个交叉检查"，骨架完全同源。
-func lowerBound(nums []int, x int) int {
+
+func LowerBound(nums []int, x int) int {
 	l, r := 0, len(nums)
 	// 为什么r是len(nums),而不是len(nums -1) 这里是为了能够表达找不到的情况,实际上也可以用len(nums-1)
 	// 那得需要额外用-1来表达，还得加判断。所以这里为了统一,用len(nums)来表达不满足条件的情况
@@ -223,6 +253,11 @@ func lowerBound(nums []int, x int) int {
 	return l
 }
 
+// ============================================================
+// 0033. 搜索旋转排序数组（中等）
+// 题面: ../mother-problems/0033-搜索旋转排序数组.md
+// 链接: https://leetcode.cn/problems/search-in-rotated-sorted-array/
+// ============================================================
 /*
 33. 搜索旋转排序数组
 
@@ -311,6 +346,11 @@ func SearchRotated(nums []int, target int) int {
 //	mid 取左中点即可——因为收缩形态是 r=mid / l=mid+1，和 34、sort.Search 同款，
 //	不需要右中点（那是 l=mid 收缩形态才需要的防死循环搭配）
 
+// ============================================================
+// 0069. x 的平方根（简单）
+// 题面: ../mother-problems/0069-x的平方根.md
+// 链接: https://leetcode.cn/problems/sqrtx/
+
 func SqrtSearchAlgs(x int) int {
 	l, r := 0, x+1
 	for l < r {
@@ -373,6 +413,11 @@ func SqetIterAlgs(x float64) float64 { // 迭代法
 	return 0.0
 }
 
+// ============================================================
+// 0875. 爱吃香蕉的珂珂（中等）
+// 题面: ../mother-problems/0875-爱吃香蕉的珂珂.md
+// 链接: https://leetcode.cn/problems/koko-eating-bananas/
+// ============================================================
 /*
 	 ---------- 台阶 2：值域 [1, max]，判定函数要自己写 ----------
 
@@ -428,6 +473,11 @@ func EtaFuckBananas(piles []int, h int) int {
 	return l
 }
 
+// ============================================================
+// 1011. 在D天内送达包裹的能力（中等）
+// 题面: ../mother-problems/1011-在D天内送达包裹的能力.md
+// 链接: https://leetcode.cn/problems/capacity-to-ship-packages-within-d-days/
+// ============================================================
 /*
  ---------- 台阶 3：同款骨架换判定，练到肌肉记忆 ----------
 
@@ -504,6 +554,11 @@ func Transmite(weights []int, days int) int {
 	return l
 }
 
+// ============================================================
+// 0162. 寻找峰值（中等）
+// 题面: ../mother-problems/0162-寻找峰值.md
+// 链接: https://leetcode.cn/problems/find-peak-element/
+// ============================================================
 /*
 形态三台阶：结构判定谓词（004 切分法的前置，此前缺失的两级）
 这类题的判定不是"值比较"而是"结构性质"：
@@ -593,6 +648,11 @@ func SearchPeakBinarySearchAlgs(nums []int) int {
 	return l
 }
 
+// ============================================================
+// 0378. 有序矩阵中第K小的元素（中等）
+// 题面: ../mother-problems/0378-有序矩阵中第K小的元素.md
+// 链接: https://leetcode.cn/problems/kth-smallest-element-in-a-sorted-matrix/
+// ============================================================
 /*
 * ---------- 台阶 B：378 计数谓词（004 的直系前置） ----------
 
@@ -676,6 +736,11 @@ func SearchMatrixSearchWay(matrix [][]int, k int) int {
 	return l
 }
 
+// ============================================================
+// 0410. 分割数组的最大值（困难）
+// 题面: ../mother-problems/0410-分割数组的最大值.md
+// 链接: https://leetcode.cn/problems/split-array-largest-sum/
+// ============================================================
 /*
  ---------- 台阶 C：410 分割数组的最大值（1011 加强，可选） ----------
 

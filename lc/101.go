@@ -22,6 +22,6 @@ package lc
 进阶：你可以运用递归和迭代两种方法解决这个问题吗？
 */
 
-func isSymmetric(root *TreeNode) bool {
+func IsSymmetric(root *TreeNode) bool {
 	panic("TODO")
 }

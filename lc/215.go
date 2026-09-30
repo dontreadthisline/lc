@@ -1,5 +1,7 @@
 package lc
 
+import "demo/algo"
+
 /*
 给定整数数组 nums 和整数 k，请返回数组中第 k 个最大的元素。
 
@@ -24,6 +26,21 @@ package lc
 - -10^4 <= nums[i] <= 10^4
 */
 
-func findKthLargest(nums []int, k int) int {
-	panic("TODO")
+
+func FindKthLargest(nums []int, k int) int {
+	less := func(a,b int) bool {
+		return a < b
+	}
+	h := algo.NewHeap(less)
+	for i,num := range nums {
+		if i < k {
+			h.Push(num)
+		} else {
+			if num > h.Peek() {
+				h.Update(0, num)
+			}
+		}
+	}
+	return h.Peek()
 }
+

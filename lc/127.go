@@ -40,6 +40,6 @@ package lc
 - wordList 中的所有字符串 互不相同
 */
 
-func ladderLength(beginWord string, endWord string, wordList []string) int {
+func LadderLength(beginWord string, endWord string, wordList []string) int {
 	panic("TODO")
 }

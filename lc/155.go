@@ -43,27 +43,45 @@ minStack.getMin();   --> 返回 -2.
 - push, pop, top, and getMin最多被调用 3 * 10^4 次
 */
 
-// 注意: 构造器按仓库惯例改名 NewXxx（同包内多个 Constructor 会重名冲突）
+//MinStack 最小栈的定义
 type MinStack struct {
-	// TODO
+	stack []int
+	mins []int
+	n int
 }
 
 func NewMinStack() *MinStack {
-	panic("TODO")
+	return &MinStack{
+		stack:make([]int,0),
+		mins:make([]int,0),
+		n:0,
+	}
 }
 
 func (s *MinStack) Push(val int) {
-	panic("TODO")
+	s.stack = append(s.stack,val)
+	min := s.GetMin()
+	if val < min {
+		s.mins = append(s.mins,val)
+	} else {
+		s.mins = append(s.mins,min)
+	}
+	s.n += 1
 }
 
 func (s *MinStack) Pop() {
-	panic("TODO")
+	if s.n <= 0 {
+		return
+	}
+	s.stack = s.stack[:s.n-1]
+	s.mins = s.mins[:s.n-1]
+	s.n -=1
 }
 
 func (s *MinStack) Top() int {
-	panic("TODO")
+	return s.stack[s.n-1]
 }
 
 func (s *MinStack) GetMin() int {
-	panic("TODO")
+	return s.mins[s.n-1]
 }

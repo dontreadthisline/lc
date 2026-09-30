@@ -35,6 +35,10 @@ package lc
 - 很容易就能实现时间复杂度为 O(n log n) 的解决方案，你可以在线性时间复杂度 O(n) 内用一趟扫描解决此问题吗？
 */
 
-func countBits(num int) []int {
-	panic("TODO")
+func CountBits(n int) []int {
+	res := make([]int,n)
+	for i := range n {
+		res[i] = HammingWeight(uint32(i))//哈哈哈哈
+	}
+	return res
 }

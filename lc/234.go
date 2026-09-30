@@ -25,7 +25,7 @@ package lc
 func IsPalindrome(head *ListNode) bool {
 	mid := MiddleOfLinkList(head)
 	mid = ReverseList(mid)
-	for ;mid != nil  && head != nil; mid = mid.Next {
+	for ; mid != nil && head != nil; mid = mid.Next {
 		if mid.Val != head.Val {
 			return false
 		}
@@ -38,7 +38,7 @@ func IsPalindrome(head *ListNode) bool {
 //双指针一遍的方法
 
 func MiddleOfLinkList(head *ListNode) *ListNode {
-	fast,slow := head,head
+	fast, slow := head, head
 	for ; fast != nil; slow = slow.Next {
 		if fast.Next == nil {
 			return slow

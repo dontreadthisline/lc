@@ -48,6 +48,30 @@ package lc
 - s 仅由括号 '()[]{}' 组成
 */
 
-func isValid(s string) bool {
-	panic("TODO")
+func IssValid(s string) bool {
+	n := len(s)
+	stack := make([]byte,n)
+	pair := map[byte]byte{
+		'[':']',
+		'(':')',
+		'{':'}',
+	}
+	for i := range n {
+		c := s[i]
+		switch c {
+		case '[','{','(':
+			l := len(stack)
+			if l <= 0 {
+				return false
+			}
+			top := stack[l-1]
+			if top != pair[c] {
+				return false
+			}
+			stack = stack[:l-1]
+		default:
+			stack = append(stack,c)
+		}
+	}
+	return len(stack) == 0
 }

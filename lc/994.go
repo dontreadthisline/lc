@@ -41,6 +41,12 @@ package lc
 - grid[i][j] 仅为 0、1 或 2
 */
 
-func orangesRotting(grid [][]int) int {
+//OrangesRotting 多源BFS
+func OrangesRotting(grid [][]int) int {
+	/*
+	m,n := len(grid),len(grid[0])
+	queue := make([][2]int,0)
+	return 0
+	*/
 	panic("TODO")
 }

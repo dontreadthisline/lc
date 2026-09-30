@@ -28,25 +28,26 @@ package lc
 */
 
 func ReverseList(head *ListNode) *ListNode {
-	if head == nil {
-		return nil
+
+	if head == nil || head.Next == nil {
+		return head
 	}
 
 	tail := head.Next
-	newHead := ReverseList(tail)
+	reversed := ReverseList(tail)
 	head.Next = nil
 	tail.Next = head
-	return newHead
+	return reversed
 }
 
 func ReverseListIterWay(head *ListNode) *ListNode {
-	var pre,cur *ListNode
-	pre,cur = nil,head
+	var pre, cur *ListNode
+	pre, cur = nil, head
 	for cur != nil {
 		next := cur.Next
 		cur.Next = pre
 		pre = cur
-		cur =  next
+		cur = next
 	}
-	return cur
+	return pre
 }

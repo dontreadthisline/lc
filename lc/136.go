@@ -32,6 +32,14 @@ package lc
 - 除了某个元素只出现一次以外，其余每个元素均出现两次。
 */
 
-func singleNumber(nums []int) int {
-	panic("TODO")
+//SingleNumber 异或操作,等于半加 所以如果两两配对的数字^操作,得数为0
+//0^0 = 0
+//1^1 = 0
+//0^1 = 1^0 = 1
+func SingleNumber(nums []int) int {
+	s := 0
+	for _,num := range nums {
+		s ^= num
+	}
+	return s
 }

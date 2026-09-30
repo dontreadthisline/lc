@@ -30,6 +30,16 @@ package lc
 - 如果多次调用这个函数，你将如何优化你的算法？
 */
 
-func hammingWeight(num uint32) int {
-	panic("TODO")
+func HammingWeight(num uint32) int {
+	var s uint32
+	for range 32 {
+  	s+= (num & 1)
+		num >>= 1
+	}
+	return int(s)
+}
+
+func HammingWeightOpti(num uint32) int {
+	var s uint32
+	return int(s)
 }
