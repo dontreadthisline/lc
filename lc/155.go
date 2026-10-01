@@ -60,6 +60,12 @@ func NewMinStack() *MinStack {
 
 func (s *MinStack) Push(val int) {
 	s.stack = append(s.stack,val)
+	if s.n == 0 {
+		s.n += 1
+		s.mins = append(s.mins,val)
+		return
+	}
+
 	min := s.GetMin()
 	if val < min {
 		s.mins = append(s.mins,val)
@@ -85,3 +91,4 @@ func (s *MinStack) Top() int {
 func (s *MinStack) GetMin() int {
 	return s.mins[s.n-1]
 }
+

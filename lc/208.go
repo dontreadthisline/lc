@@ -68,23 +68,24 @@ func insert(t *Trie,word string) {
 	if word == "" {
 		return
 	}
-	for i := range len(word) {
-		c := word[i]
-		if t.children[c] == nil {
-			t.children[c] = new(Trie)
-		}
-		t = t.children[c]
-	}
 
+	for i := range len(word) {
+		idx := word[i]  - 'a'
+		if t.children[idx] == nil {
+			t.children[idx] = new(Trie)
+		}
+		t = t.children[idx]
+	}
 	t.end = true
 }
 
 func search(t *Trie, word string) *Trie {
 	for i := range len(word) {
-		if t == nil  || t.children[word[i]] == nil {
+		idx := word[i] - 'a'
+		if t == nil  || t.children[idx] == nil {
 			return nil
 		}
-		t = t.children[word[i]]
+		t = t.children[idx]
 	}
 	return t
 }

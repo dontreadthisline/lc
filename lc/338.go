@@ -36,9 +36,9 @@ package lc
 */
 
 func CountBits(n int) []int {
-	res := make([]int,n)
-	for i := range n {
-		res[i] = HammingWeight(uint32(i))//哈哈哈哈
+	res := make([]int,n+1)
+	for i := range n+1 {
+		res[i] = HammingWeight(uint32(i))
 	}
 	return res
 }

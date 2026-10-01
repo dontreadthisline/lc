@@ -36,13 +36,16 @@ func MaxAreaOfIsland(grid [][]int) int {
 	dirs := [][]int{
 		{-1,0},{0,1},{1,0},{0,-1},
 	}
+
 	visited := make([][]bool,m)
 	for i := range m {
 		visited[i] = make([]bool,n)
 	}
+
 	var dfs func(r,c int,cnt *int)
 	dfs = func(r,c int,cnt *int) {
 		visited[r][c] = true
+		*cnt = *cnt + 1
 		for _,dir := range dirs {
 			r1,c1 := dir[0] + r,dir[1] + c
 			if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n {
@@ -51,7 +54,6 @@ func MaxAreaOfIsland(grid [][]int) int {
 			if visited[r1][c1] || grid[r1][c1] == 0 {
 				continue
 			}
-			*cnt = *cnt + 1
 			dfs(r1,c1,cnt)
 		}
 	}
@@ -59,8 +61,8 @@ func MaxAreaOfIsland(grid [][]int) int {
 	res := 0
 	for i := range m {
 		for j := range n {
-			var cnt int
-			if grid[i][j] == 1 || !visited[i][j] {
+			if grid[i][j] == 1 && !visited[i][j] {
+				cnt := 0
 				dfs(i,j,&cnt)
 				res = max(res,cnt)
 			}

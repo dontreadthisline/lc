@@ -52,6 +52,11 @@ func MergeKLists(lists []*ListNode) *ListNode {
 	h := algo.NewHeap(less)
 	dummy := &ListNode{}
 	cur := dummy
+	for _,l := range lists {
+		if l != nil {
+			h.Push(l)
+		}
+	}
 	for h.Len() > 0 {
 		node := h.Pop()
 		if node.Next != nil {

@@ -2,7 +2,7 @@ package lc
 
 import "math"
 
-// MaxPathSum
+// MaxPathSum 最大路径和
 func MaxPathSum(root *TreeNode) int {
 	res := math.MinInt
 	var dfs func(*TreeNode,[]int)
@@ -17,8 +17,7 @@ func MaxPathSum(root *TreeNode) int {
 			res = max(res,sum)
 		}
 		dfs(root.Left,path)
-		dfs(root.Left,path)
-		path = path[:len(path)-1]
+		dfs(root.Right,path)
 	}
 	dfs(root,[]int{})
 	return res

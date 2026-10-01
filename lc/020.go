@@ -50,7 +50,7 @@ package lc
 
 func IssValid(s string) bool {
 	n := len(s)
-	stack := make([]byte,n)
+	stack := make([]byte,0,n)
 	pair := map[byte]byte{
 		']':'[',
 		')':'(',

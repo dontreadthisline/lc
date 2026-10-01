@@ -28,8 +28,13 @@ package lc
 
 - `1 <= nums[i], k <= nums.length`
 */
-// GoodArrays
+
+// GoodArrays 好数组的个数
 func GoodArrays(nums []int,k int) int {
+	return atMostKGoodArray(nums, k) - atMostKGoodArray(nums, k-1)
+}
+
+func atMostKGoodArray(nums []int,k int) int {
 	n,res := len(nums),0
 	i,j := 0,0
 	m :=make(map[int]int,k)
@@ -41,7 +46,7 @@ func GoodArrays(nums []int,k int) int {
 				delete(m,nums[i])
 			}
 		}
-		res += (j - i + 1)
+		res += (j - i) 
 	}
 	return res
 }
