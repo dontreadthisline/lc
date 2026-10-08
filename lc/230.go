@@ -25,5 +25,20 @@ package lc
 */
 
 func KthSmallest(root *TreeNode, k int) int {
-	return 0
+	var nodesCnt func(*TreeNode) int
+	nodesCnt = func(root *TreeNode) int {
+		if root == nil {
+			return 0
+		}
+		return 1 + nodesCnt(root.Left) + nodesCnt(root.Right)
+	}
+	cnt := nodesCnt(root.Left)
+	if cnt + 1 == k {
+		return root.Val
+	} else if cnt + 1 > k {
+		return KthSmallest(root.Left, k)
+	} else {
+		return KthSmallest(root.Right, k-cnt-1)
+	}
 }
+

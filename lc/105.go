@@ -31,5 +31,5 @@ package lc
 */
 
 func buildTree(preorder []int, inorder []int) *TreeNode {
-	panic("TODO")
+	return nil
 }

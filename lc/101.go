@@ -23,5 +23,27 @@ package lc
 */
 
 func IsSymmetric(root *TreeNode) bool {
-	panic("TODO")
+	var symmetricSame func(*TreeNode,*TreeNode) bool
+	symmetricSame = func(p *TreeNode,q *TreeNode) bool {
+		if p == nil && q == nil {
+			return true
+		}
+		if p != nil && q == nil || p == nil && q != nil {
+			return false
+		}
+		if p.Val != q.Val {
+			return false
+		}
+		return symmetricSame(p.Left,q.Right) && symmetricSame(p.Right,q.Left)
+	}
+	if root == nil {
+		return true
+	}
+	return symmetricSame(root.Left,root.Right)
+}
+
+//层序遍历
+
+func IsSymmetricLevelIter(root *TreeNode) bool {
+	return false
 }

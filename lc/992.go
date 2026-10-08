@@ -46,7 +46,7 @@ func atMostKGoodArray(nums []int,k int) int {
 				delete(m,nums[i])
 			}
 		}
-		res += (j - i) 
+		res += (j - i)
 	}
 	return res
 }

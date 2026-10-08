@@ -27,15 +27,16 @@ import (
 
 - 0 <= nums[i] <= 10^9
 */
+//121 12 12 12 1
+//122 12 12 2 12
 
 func LargestNumber(nums []int) string {
-	slices.SortFunc(nums,func(a,b int) int {
-		s1,s2 := fmt.Sprintf("%d",a),fmt.Sprintf("%d", b)
-		return -strings.Compare(s1,s2)
-	})
-	sb := strings.Builder{}
-	for _,num :=range nums {
-		sb.WriteString(fmt.Sprintf("%d", num))
+	strs := make([]string,len(nums))
+	for i,num := range nums {
+		strs[i] = fmt.Sprintf("%d",num)
 	}
-	return sb.String()
+	slices.SortFunc(strs,  func(a string, b string) int {
+		return strings.Compare(b+a,a+b)
+	})
+	return strings.Join(strs,"")
 }

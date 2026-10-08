@@ -36,5 +36,53 @@ package lc
 */
 
 func lowestCommonAncestor(root *TreeNode, p *TreeNode, q *TreeNode) *TreeNode {
-	panic("TODO")
+	//exists定义,如果以node为根节点的树,出现过任意节点,那么返回这个根节点
+	var exists func(*TreeNode,*TreeNode,*TreeNode) *TreeNode
+	exists = func(root *TreeNode,p *TreeNode,q *TreeNode) *TreeNode {
+		if root == nil || root == p || root == q {
+			return root
+		}
+		left := exists(root.Left, p,q)
+		right := exists(root.Right, p,q)
+		if left != nil && right != nil {
+			return root
+		}
+		if left != nil {
+			return left
+		}
+		return right
+	}
+	return exists(root,p,q)
+}
+//  1 (1,1,2)
+// /
+//2
+
+func LowestCommonAncestor(root *TreeNode, p *TreeNode, q *TreeNode) *TreeNode {
+	var lcs func(*TreeNode,*TreeNode,*TreeNode) (int,*TreeNode)
+	lcs = func(root *TreeNode,q *TreeNode,p*TreeNode) (int,*TreeNode) {
+		var total int
+		if root == nil {
+			return 0,root
+		}
+		found := 0
+		if root == p || root == q {
+			found += 1
+		}
+		cnt1,left := lcs(root.Left,p,q) //2,1,2
+		cnt2,right := lcs(root.Right,p,q)
+		total = found + cnt1 + cnt2
+		if cnt1 == 1 && cnt2 == 1 && left == nil  && right == nil {
+			return total,root
+		} else if found == 1 && total == 2 && left == nil && right == nil {//对应p是q的直接祖先的情况
+			return total,root
+		} else if left != nil {
+			return total,left
+		} else if right != nil {
+			return total,right
+		}
+		return total,nil
+	}
+	_,node := lcs(root,p,q)
+	return node
 }

@@ -40,6 +40,19 @@ package lc
 进阶：你能否实现线性时间复杂度、仅使用额外常数空间的算法解决此问题?
 */
 
-func missingNumber(nums []int) int {
-	panic("TODO")
+func MissingNumber(nums []int) int {
+	n := len(nums)
+	i := 0
+	for i < n {
+		for nums[i] != i && nums[i] < n {
+			nums[nums[i]],nums[i] = nums[i],nums[nums[i]]
+		}
+		i++
+	}
+	for i,num := range nums {
+		if num != i {
+			return i
+		}
+	}
+	return n
 }

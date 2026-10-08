@@ -121,29 +121,26 @@ divisors[i] 的 可整除性得分 等于满足 nums[j] 能被 divisors[i] 整�
 难度：简单  标签：数组、数学
 链接：https://leetcode.cn/problems/find-if-digit-game-can-be-won/
 
-给你一个正整数数组 nums 。
-Alice 和 Bob 轮流进行如下选择游戏，Alice 先手：
-  - 每一轮，当前玩家从 nums 中选出一个数字（数字被移除）
-Alice 只能选 单个数字位 的数（1 到 9），Bob 只能选 至少两个数字位 的数（10 及以上）。
-如果没有玩家能选（轮到某人但无符合条件的数字），该玩家输。
-若 Alice 获胜返回 true，Bob 获胜返回 false。
+给你一个正整数数组 nums。
+Alice 和 Bob 正在玩游戏。在游戏中，Alice 可以从 nums 中选择**所有个位数**或**所有两位数**，
+剩余的数字归 Bob 所有。如果 Alice 所选数字之和严格大于 Bob 的数字之和，则 Alice 获胜。
+如果 Alice 能赢得这场游戏，返回 true；否则返回 false。
 
 示例 1：
 输入：nums = [1,2,3,4,10]
-输出：true
-解释：Alice 先手拿走 1..4 中的任意一个；最终 Alice 拿的单 digit 数多于……（策略详见原题）
-
+输出：false
+解释：Alice 不管选个位数还是两位数都无法赢得比赛。
 示例 2：
 输入：nums = [1,2,3,4,5,14]
 输出：true
-
+解释：Alice 选择个位数，和为 15 > 14。
 示例 3：
 输入：nums = [5,5,5,25]
 输出：true
-
+解释：Alice 选择两位数，和为 25 > 15。
 提示：
 - 1 <= nums.length <= 100
-- 1 <= nums[i] <= 10^5
+- 1 <= nums[i] <= 99
 */
 
 // ============================ 挑战函数 ============================
@@ -154,9 +151,9 @@ func MinMountainSum(nums []int) int {
 	n := len(nums)
 	for i := range n {
 		for j := i + 1; j < n; j++ {
-			for k := j + 1; k < n; j++ {
+			for k := j + 1; k < n; k++ {
 				if nums[j] > nums[i] && nums[j] > nums[k] {
-					res = min(res,nums[i]+nums[j]+nums[k])
+					res = min(res, nums[i]+nums[j]+nums[k])
 				}
 			}
 		}
@@ -170,18 +167,16 @@ func MinMountainSum(nums []int) int {
 // MaxDivisibilityScoreDivisor 2644：语义按测试用例（见 lc_tests/easy_challenge_test.go 顶注）
 func MaxDivisibilityScoreDivisor(nums []int, divisors []int) int {
 	// TODO: 挑战 2（语义：返回能整除 nums 中最多元素的 divisors 值，并列取最小）
-	res,max := 0,-1
-	for _,divisor := range divisors {
+	res, max := 0, -1
+	for _, divisor := range divisors {
 		cnt := 0
-		for _,num := range nums {
-			if num % divisor == 0 {
+		for _, num := range nums {
+			if num%divisor == 0 {
 				cnt++
 			}
 		}
-		if max == -1 && cnt > 0{
-			res,max = divisor,cnt
-		} else if cnt >= max && divisor < res {
-			res,max = divisor,cnt
+		if cnt > max || (cnt == max && divisor < res) {
+			res, max = divisor, cnt
 		}
 	}
 	return res
@@ -189,17 +184,50 @@ func MaxDivisibilityScoreDivisor(nums []int, divisors []int) int {
 
 // MakeSameSquare 3127：能否（至多改一格）得到同色 2x2 正方形
 func MakeSameSquare(grid [][]byte) bool {
-	//扫描,然后数四个框,然后数b,w的个数,任意一个<=1就可以
+	locs := [][]int{{0, 0}, {0, 1}, {1, 0}, {1, 1}}
+	for i := 0; i <= 1; i++ {
+		for j := 0; j <= 1; j++ {
+			w, b := 0, 0
+			for _, loc := range locs {
+				r, c := loc[0]+i, loc[1]+j
+				if grid[r][c] == 'B' {
+					b++
+				} else {
+					w++
+				}
+			}
+			if w <= 1 || b <= 1 {
+				return true
+			}
+		}
+	}
 	return false
 }
 
 // NumberOfLines806 806：写字符串的 [行数, 末行宽度]
 func NumberOfLines806(widths []int, s string) []int {
-	// TODO: 挑战 4
-	panic("TODO")
+	row, rowLen := 1, 0
+	n := len(s)
+	for i := range n {
+		if rowLen+widths[s[i]-'a'] > 100 {
+			row++
+			rowLen = 0
+		}
+		rowLen += widths[s[i]-'a']
+	}
+	return []int{row, rowLen}
 }
 
 // DigitGameWin 3232：Alice 是否获胜
 func DigitGameWin(nums []int) bool {
-	return true
+	cnt1, cnt2, sum := 0, 0, 0
+	for _, num := range nums {
+		if num <= 9 {
+			cnt1 += num
+		} else {
+			cnt2 += num
+		}
+		sum += num
+	}
+	return cnt1 > sum-cnt1 || cnt2 > sum-cnt2
 }

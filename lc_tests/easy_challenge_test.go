@@ -238,46 +238,32 @@ func TestNumberOfLines806(t *testing.T) {
 	}
 }
 
-// 3232. 判断是否可以赢得数字游戏（参照：直接模拟对局）
+// 3232. 真实题面：Alice 一次性选全部个位数或全部两位数，比较和的严格大小
 func TestDigitGameWin(t *testing.T) {
 	ref := func(nums []int) bool {
 		single, multi := 0, 0
 		for _, x := range nums {
 			if x < 10 {
-				single++
+				single += x
 			} else {
-				multi++
+				multi += x
 			}
 		}
-		// 模拟：Alice 只能拿 single，Bob 只能拿 multi，轮到无牌者输，Alice 先手
-		turnAlice := true
-		for {
-			if turnAlice {
-				if single == 0 {
-					return false
-				}
-				single--
-			} else {
-				if multi == 0 {
-					return true
-				}
-				multi--
-			}
-			turnAlice = !turnAlice
-		}
+		return single > multi || multi > single
 	}
-	for _, c := range []struct {
+	cases := []struct {
 		nums []int
 		want bool
 	}{
-		{[]int{1, 2, 3, 4, 10}, true},    // 官方 1
-		{[]int{1, 2, 3, 4, 5, 14}, true}, // 官方 2
-		{[]int{5, 5, 5, 25}, true},       // 官方 3
-		{[]int{10, 20}, false},           // Alice 无 single 可拿
-		{[]int{1, 100}, false},           // 1:1 平，Alice 先耗尽
-		{[]int{5}, true},                 // Bob 直接无 multi
-		{[]int{100}, false},
-	} {
+		{[]int{1, 2, 3, 4, 10}, false},   // 官方 1：10 vs 10，不严格大于
+		{[]int{1, 2, 3, 4, 5, 14}, true}, // 官方 2：15 > 14
+		{[]int{5, 5, 5, 25}, true},       // 官方 3：25 > 15
+		{[]int{5, 5, 5, 15}, false},      // 15 vs 15，平
+		{[]int{5}, true},                 // 另一侧为空
+		{[]int{10, 20}, true},            // 个位侧为空
+		{[]int{100}, true},
+	}
+	for _, c := range cases {
 		runOrSkip(t, func() {
 			if got := lc.DigitGameWin(c.nums); got != c.want {
 				t.Errorf("DigitGameWin(%v) = %v, want %v", c.nums, got, c.want)
