@@ -50,10 +50,10 @@ func LongestConsecutiveSortAlgs(nums []int) int {
 }
 
 func LongestConsecutive(nums []int) int {
-	return longestConsecutiveHashsetAlgs(nums)
+	return LongestConsecutiveHashsetAlgs(nums)
 }
 
-func longestConsecutiveHashsetAlgs(nums []int) int {
+func LongestConsecutiveHashsetAlgs(nums []int) int {
 	n, res := len(nums), 0
 	m := make(map[int]int, n)
 	for _, num := range nums {

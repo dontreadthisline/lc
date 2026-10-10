@@ -32,6 +32,6 @@ package lc
 - 你能想出一个仅使用常量空间的解决方案吗？
 */
 
-func setZeroes(matrix [][]int) {
+func SetZeroes(matrix [][]int) {
 	panic("TODO")
 }

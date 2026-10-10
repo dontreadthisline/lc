@@ -25,6 +25,6 @@ n 皇后问题 研究的是如何将 n 个皇后放置在 n×n 的棋盘上，�
 - 1 <= n <= 9
 */
 
-func solveNQueens(n int) [][]string {
+func SolveNQueens(n int) [][]string {
 	panic("TODO")
 }

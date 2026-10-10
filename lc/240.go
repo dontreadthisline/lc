@@ -34,6 +34,6 @@ package lc
 - -10^9 <= target <= 10^9
 */
 
-func searchMatrix(matrix [][]int, target int) bool {
-	panic("TODO")
+func SearchMatrix(matrix [][]int, target int) bool {
+	return false
 }

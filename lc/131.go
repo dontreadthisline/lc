@@ -20,6 +20,6 @@ package lc
 - s 仅由小写英文字母组成
 */
 
-func partition(s string) [][]string {
+func Partition(s string) [][]string {
 	panic("TODO")
 }

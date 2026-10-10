@@ -28,6 +28,6 @@ k 是一个正整数，它的值小于或等于链表的长度。如果节点总
 进阶：你可以设计一个只用 O(1) 额外内存空间的算法解决此问题吗？
 */
 
-func reverseKGroup(head *ListNode, k int) *ListNode {
+func ReverseKGroup(head *ListNode, k int) *ListNode {
 	panic("TODO")
 }

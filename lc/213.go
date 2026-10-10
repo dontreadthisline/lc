@@ -30,6 +30,6 @@ package lc
 - 0 <= nums[i] <= 1000
 */
 
-func robII(nums []int) int {
+func RobII(nums []int) int {
 	panic("TODO")
 }

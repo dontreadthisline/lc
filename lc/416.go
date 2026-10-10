@@ -22,6 +22,6 @@ package lc
 - 1 <= nums[i] <= 100
 */
 
-func canPartition(nums []int) bool {
+func CanPartition(nums []int) bool {
 	panic("TODO")
 }

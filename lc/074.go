@@ -34,6 +34,20 @@ package lc
 
 // 注意: 与 240 的 SearchMatrixSearchWay 区分——本题每行首元素大于上一行末元素，
 // 可视为一维有序数组的展平，直接二分即可
-func searchSortedMatrix(matrix [][]int, target int) bool {
-	panic("TODO")
+
+func SearchSortedMatrix(matrix [][]int, target int) bool {
+	m,n := len(matrix),len(matrix[0])
+	l,r := 0,m * n -1
+	for l <= r {
+		mid := l + (r-l) / 2
+		i,j := mid/n,mid % n
+		if matrix[i][j]==target {
+			return true
+		} else if matrix[i][j] < target {
+			l = mid + 1
+		} else {
+			r = mid -1
+		}
+	}
+	return false
 }

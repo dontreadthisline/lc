@@ -18,6 +18,6 @@ package lc
 - 1 <= n <= 8
 */
 
-func generateParenthesis(n int) []string {
+func GenerateParenthesis(n int) []string {
 	panic("TODO")
 }

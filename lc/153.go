@@ -1,5 +1,7 @@
 package lc
 
+import "math"
+
 /*
 已知一个长度为 n 的数组，预先按照升序排列，经由 1 到 n 次 旋转 后，得到输入数组。例如，原数组 nums = [0,1,2,4,5,6,7] 在变化后可能得到：
 
@@ -14,7 +16,11 @@ package lc
 你必须设计一个时间复杂度为 O(log n) 的算法解决此问题。
 
 示例 1：
-
+//1,2,3,4,5
+//5,1,2,3,4
+//4,5,1,2,3
+//3,4,5,1,2
+//2,3,4,5,1
 输入：nums = [3,4,5,1,2]
 输出：1
 解释：原数组为 [1,2,3,4,5] ，旋转 3 次得到输入数组。
@@ -44,6 +50,32 @@ package lc
 - nums 原来是一个升序排序的数组，并进行了 1 至 n 次旋转
 */
 
-func findMin(nums []int) int {
-	panic("TODO")
+func FindMin(nums []int) int {
+	l,r := 0,len(nums)-1
+	//不变量保持,min一定出现[l,r]里,且要么是nums[r],要么就是出现nums[r]的左侧(注意,这个不变量对于数组是否旋转,都成立!)
+	//往后分割的过程,需要保持住这个不变量 nums[mid] > nums[r] => 旋转点已经在[mid+1,r]里,不变量保持 nums[r]要么是最小值，要么最小值出现在r的左侧
+	//否则新的区间变成[l,mid] 最小值要么是numd[mid]//新的右边界,或者在nums[mid]的左侧：注意，这样的搜索区间一定不会越过旋转点,直接跳跃到左边。因为我们的右边界不是通过-1收缩的
+	//中间只要是有旋转点,左边界nums[mid] > nums[r]的条件收缩就不会走到,只能通过mid = r来收缩，这样一定不会越过中间的旋转锚点
+	
+	//如果换成nums[l]或者nums[0]来思考是否成立?
+	//先换成nums[l] min一定出现[l,r]里,要么就是nums[l] 或者一定出现在l的右侧
+	//nums[mid]和nums[l] 比较 nums[mid] > nums[l] => l = mid + 1 会破坏掉不变量结构,nums[l]恰好就是min的情况
+	// 换成nums[0]来思考？
+	for l < r {
+		mid := l + (r - l) / 2
+		if nums[mid] > nums[r] {
+			l = mid + 1
+		} else {
+			r = mid
+		}
+	}
+	return nums[l]
+}
+
+func FindMinLinearSearch(nums []int) int {
+	res := math.MaxInt
+	for _,num := range nums {
+		res = min(res,num)
+	}
+	return res
 }

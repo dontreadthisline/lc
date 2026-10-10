@@ -38,6 +38,6 @@ package lc
 - -2^31 <= x_start < x_end <= 2^31 - 1
 */
 
-func findMinArrowShots(points [][]int) int {
+func FindMinArrowShots(points [][]int) int {
 	panic("TODO")
 }

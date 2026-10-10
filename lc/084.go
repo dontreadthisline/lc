@@ -23,6 +23,6 @@ package lc
 - 0 <= heights[i] <= 10^4
 */
 
-func largestRectangleArea(heights []int) int {
+func LargestRectangleArea(heights []int) int {
 	panic("TODO")
 }

@@ -55,12 +55,11 @@ func NumIslands(grid [][]byte) int {
 		visited[r][c] = true
 		for _,dir := range dirs {
 			r1,c1 := dir[0] + r,dir[1] + c
-			//边界
-			if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n {
-				continue
+			if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n { //边界
+				continue 
 			}
-			//已访问或者本身不可达
-			if visited[r1][c1] || grid[r1][c1] == '0' {
+			
+			if visited[r1][c1] || grid[r1][c1] == '0' { //已访问或者本身不可达
 				continue
 			}
 			dfs(r1,c1)
@@ -80,3 +79,46 @@ func NumIslands(grid [][]byte) int {
 	return cnt
 }
 
+func NumIslandsBFS(grid [][]byte) int {
+	m,n := len(grid),len(grid[0])
+	dirs := [][]int{
+		{-1,0},{0,1},{1,0},{0,-1},
+	}
+
+	visited := make([][]bool,m)
+	for i := range m {
+		visited[i] = make([]bool,n)
+	}
+
+	var bfs func(r,c int)
+	bfs = func(r,c int) {
+		queue := [][]int{{r,c}}
+		visited[r][c] = true
+		for len(queue) > 0 {
+			r,c := queue[0][0],queue[0][1] //出队访问
+			for _,dir := range dirs {
+				r1,c1 := dir[0] + r,dir[1] + c
+				if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n { //边界
+					continue
+				}
+				if visited[r1][c1] || grid[r1][c1] == '0' {//已访问或者本身不可达
+					continue
+				}
+				queue = append(queue,[]int{r1,c1})
+				visited[r1][c1] = true //入队就标访问,这样会保险一些
+			}
+			queue = queue[1:len(queue)]
+		}
+	}
+	cnt := 0
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			if grid[i][j] == '1' && !visited[i][j] {
+				bfs(i,j)
+				cnt++
+			}
+		}
+	}
+
+	return cnt
+}

@@ -162,17 +162,20 @@ func FindMedianBinarySearchAlgs(nums1, nums2 []int) float64 {
 - nums 的每个元素都将在 [-9999, 9999]之间。
 */
 
+//BinarySearch 调用方自己保证数组不空
 func BinarySearch(nums []int, target int) int {
 	l, r := 0, len(nums)-1
-	for l <= r {
-		mid := (l + r) / 2
-		if nums[mid] == target {
-			return mid
-		} else if nums[mid] > target {
-			r = mid - 1
+	for l < r {
+		mid := l + (r - l) / 2
+		if nums[mid] >= target {
+			r = mid
 		} else {
 			l = mid + 1
 		}
+	}
+	//退出条件只能是这样
+	if nums[l] == target {
+		return l
 	}
 	return -1
 }

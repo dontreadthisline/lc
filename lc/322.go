@@ -32,6 +32,6 @@ package lc
 - 0 <= amount <= 10^4
 */
 
-func coinChange(coins []int, amount int) int {
+func CoinChange(coins []int, amount int) int {
 	panic("TODO")
 }

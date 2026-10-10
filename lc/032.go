@@ -29,6 +29,6 @@ package lc
 - s[i] 为 '(' 或 ')'
 */
 
-func longestValidParentheses(s string) int {
+func LongestValidParentheses(s string) int {
 	panic("TODO")
 }

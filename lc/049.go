@@ -43,7 +43,7 @@ import (
 - strs[i] 仅包含小写字母
 */
 
-func groupAnagramsSortWay(strs []string) [][]string {
+func GroupAnagramsSortWay(strs []string) [][]string {
 	anagrams := func(s1, s2 string) int {
 		if len(s1) != len(s2) {
 			return strings.Compare(s1, s2)
@@ -76,7 +76,7 @@ func groupAnagramsSortWay(strs []string) [][]string {
 	return groups
 }
 
-func groupAnagramsHashWay(strs []string) [][]string {
+func GroupAnagramsHashWay(strs []string) [][]string {
 	anagramsKey := func(s string) string {
 		chars := []byte(s)
 		slices.Sort(chars)
@@ -99,5 +99,5 @@ func groupAnagramsHashWay(strs []string) [][]string {
 }
 
 func GroupAnagrams(strs []string) [][]string {
-	return groupAnagramsHashWay(strs)
+	return GroupAnagramsHashWay(strs)
 }

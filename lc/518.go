@@ -41,6 +41,6 @@ package lc
 - 0 <= amount <= 5000
 */
 
-func change(amount int, coins []int) int {
+func Change(amount int, coins []int) int {
 	panic("TODO")
 }

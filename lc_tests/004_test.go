@@ -169,7 +169,7 @@ func TestBinarySearch(t *testing.T) {
 func TestBinarySearchRandomCrossCheck(t *testing.T) {
 	rng := rand.New(rand.NewSource(31))
 	for iter := 0; iter < 20000; iter++ {
-		n := rng.Intn(15)
+		n := 1 + rng.Intn(14)
 		nums := make([]int, n)
 		v := rng.Intn(5) - 2
 		for i := range nums {

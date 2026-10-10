@@ -25,6 +25,47 @@ package lc
 - 30 <= temperatures[i] <= 100
 */
 
-func dailyTemperatures(temperatures []int) []int {
-	panic("TODO")
+func DailyTemperatures(temperatures []int) []int {
+	n := len(temperatures)
+	stack := make([]int,0,n)
+	res := make([]int,n)
+
+	for i,t := range temperatures {
+		for n := len(stack); n  > 0  && t > temperatures[stack[n-1]]; n = len(stack){
+			res[stack[n-1]] = i - stack[n-1]
+			stack = stack[0:n-1]
+		}
+		stack = append(stack,i)
+	}
+
+	for n := len(stack); n > 0; n = len(stack) {
+		res[stack[n-1]] = 0
+		stack=stack[0:n-1]
+	}
+
+	return res
 }
+
+
+func DailyTemperatures1(temperatures []int) []int {
+	n := len(temperatures)
+	stack := NewStack[int]()
+	res := make([]int,n)
+
+	for i,t := range temperatures {
+		for stack.Len() > 0 && t > temperatures[stack.Peek()] {
+			res[stack.Peek()] = i - stack.Peek()
+			stack.Pop()
+		}
+		stack.Push(i)
+	}
+
+	for stack.Len() > 0 {
+		res[stack.Peek()] = 0
+		stack.Pop()
+	}
+
+	return res
+}
+
+

@@ -49,7 +49,7 @@ func MinSubArrayLen(target int, nums []int) int {
 	return res
 }
 
-func atMostSum(nums []int, goal int) int {
+func AtMostSum(nums []int, goal int) int {
 	if goal < 0 {
 		return 0
 	}
@@ -89,7 +89,7 @@ func NumSubarrayProductLessThanK(nums []int, k int) int {
 // 备注,这个题目,不需要强约束为nums[i] in set {0,1} 只要规定nums[i] >= 0 题目就完全能做,和713完全一样的约束
 
 func NumSubarraysWithSum(nums []int, goal int) int {
-	return atMostSum(nums, goal) - atMostSum(nums, goal-1) //eqaul goal
+	return AtMostSum(nums, goal) - AtMostSum(nums, goal-1) //eqaul goal
 }
 
 // 438. 找到字符串中所有字母异位词

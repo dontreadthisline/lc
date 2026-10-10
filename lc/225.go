@@ -45,28 +45,39 @@ myStack.empty(); // 返回 False
 
 进阶：你能否仅用一个队列来实现栈。
 */
+//假定队列是单向队列,但是支持获取队尾操作
 
-// 注意: 构造器按仓库惯例改名 NewXxx（同包内多个 Constructor 会重名冲突）
-type MyQueue struct {
-	// TODO
+type MyStack struct {
+	queue *Queue[int]
 }
 
-func NewMyQueue() *MyQueue {
-	panic("TODO")
+func NewMyStack() *MyStack {
+	return &MyStack{
+		queue: NewQueue[int](),
+	}
 }
 
-func (q *MyQueue) Push(x int) {
-	panic("TODO")
+func (s *MyStack) Push(x int) {
+	s.queue.Enque(x)
 }
 
-func (q *MyQueue) Pop() int {
-	panic("TODO")
+func (s *MyStack) Pop() int {
+	n := s.queue.Len()
+	var item int
+	for i := range n {
+		item = s.queue.Deque()
+		if i < n - 1 {
+			s.queue.Enque(item)
+		}
+	}
+	return item
 }
 
-func (q *MyQueue) Peek() int {
-	panic("TODO")
+func (s *MyStack) Top() int {
+	return s.queue.Tail()
 }
 
-func (q *MyQueue) Empty() bool {
-	panic("TODO")
+func (s *MyStack) Empty() bool {
+	return s.queue.Empty()
 }
+

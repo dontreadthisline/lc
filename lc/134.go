@@ -43,6 +43,6 @@ package lc
 - 输入保证答案唯一。
 */
 
-func canCompleteCircuit(gas []int, cost []int) int {
+func CanCompleteCircuit(gas []int, cost []int) int {
 	panic("TODO")
 }

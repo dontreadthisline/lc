@@ -25,6 +25,15 @@ package lc
 - -10^9 <= nums[i] <= 10^9
 */
 
-func nextGreaterElements(nums []int) []int {
-	panic("TODO")
+func NextGreaterElements(nums []int) []int {
+	n := len(nums)
+	stack := make([]int,0,n)
+	res := make([]int,0,n)
+	for _,num := range nums {
+		if len(stack) <= 0 {
+			stack = append(stack,num)
+		}
+
+	}
+	return res
 }

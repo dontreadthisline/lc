@@ -43,10 +43,33 @@ package lc
 
 //OrangesRotting 多源BFS
 func OrangesRotting(grid [][]int) int {
-	/*
 	m,n := len(grid),len(grid[0])
-	queue := make([][2]int,0)
-	return 0
-	*/
-	panic("TODO")
+	dirs := [][]int{
+		{-1,0},{0,1},{1,0},{0,-1},
+	}
+	queue := make([][]int,0)
+	for i := range m {
+		for j := range n {
+			if grid[i][j] == 2 { //已腐烂,多源bfs
+				queue = append(queue,[]int{i,j})
+			}
+		}
+	}
+	var cnt int
+	for len(queue) > 0 {
+		r,c := queue[0][0],queue[0][1]
+		for _,dir := range dirs {
+			r1,c1 := r + dir[0],c + dir[1]
+			if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n {
+				continue
+			}
+			if grid[r1][c1] != 1{ //已经腐烂或者本身就是空位
+				continue
+			}
+			grid[r1][c1] = 2
+			cnt += 1
+		}
+		queue = queue[1:len(queue)]
+	}
+	return cnt
 }

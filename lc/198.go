@@ -26,6 +26,6 @@ package lc
 - 0 <= nums[i] <= 400
 */
 
-func rob(nums []int) int {
+func Rob(nums []int) int {
 	panic("TODO")
 }

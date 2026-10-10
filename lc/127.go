@@ -40,6 +40,43 @@ package lc
 - wordList 中的所有字符串 互不相同
 */
 
-func LadderLength(beginWord string, endWord string, wordList []string) int {
-	panic("TODO")
+func LadderLength(begin string, end string, wordList []string) int {
+
+	graph := make(map[string][]string,len(wordList))
+	for _,word := range wordList {
+		for _,adj := range wordList {
+			if word != adj {
+				graph[word] = append(graph[word],adj)
+			}
+		}
+	} //有缩短预先构建图的时间效率么?
+
+	if len(graph[begin]) <= 0 || len(graph[end]) <= 0 {
+		return 0
+	}
+
+	var bfs func(string, string) int
+	bfs = func(begin, end string)  int {
+		var cnt int
+		visited := map[string]bool{}
+		visited[begin] = true
+		queue := []string{begin}
+		for len(queue) > 0 {
+			word := queue[0]
+			for _,adj := range graph[word] {
+				if adj == end {
+					goto ret
+				}
+				if !visited[adj] {
+					queue = append(queue,adj)
+					visited[adj] = true
+				}
+			}
+			cnt += 1
+			queue = queue[1:len(queue)]
+		}
+		ret:
+		return cnt
+	}
+	return bfs(begin,end)
 }

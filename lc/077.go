@@ -30,6 +30,6 @@ package lc
 - 1 <= k <= n
 */
 
-func combine(n int, k int) [][]int {
+func Combine(n int, k int) [][]int {
 	panic("TODO")
 }

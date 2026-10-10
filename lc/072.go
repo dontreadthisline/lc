@@ -38,6 +38,6 @@ exection -> execution (插入 'u')
 - word1 和 word2 由小写英文字母组成
 */
 
-func minDistance(word1 string, word2 string) int {
+func MinDistance(word1 string, word2 string) int {
 	panic("TODO")
 }

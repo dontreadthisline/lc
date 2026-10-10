@@ -27,6 +27,6 @@ package lc
 - 0 <= grid[i][j] <= 200
 */
 
-func minPathSum(grid [][]int) int {
+func MinPathSum(grid [][]int) int {
 	panic("TODO")
 }

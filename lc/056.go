@@ -1,5 +1,7 @@
 package lc
 
+import "slices"
+
 /*
 以数组 intervals 表示若干个区间的集合，其中单个区间为 intervals[i] = [start_i, end_i] 。请你合并所有重叠的区间，并返回 *一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间* 。
 
@@ -30,6 +32,20 @@ package lc
 - 0 <= start_i <= end_i <= 10^4
 */
 
-func merge(intervals [][]int) [][]int {
-	panic("TODO")
+func MergeRange(intervals [][]int) [][]int {
+	slices.SortFunc(intervals,func(a,b []int) int {
+		return a[0] - b[0]
+	})
+	i,j,n := 1,0,len(intervals)
+	res := make([][]int,0,n)
+	res = append(res, intervals[0])
+	for ; i < n; i++ {
+		if intervals[i][0] <= res[j][1] {
+			res[j] = []int{res[j][0],intervals[i][1]}
+		} else {
+			res = append(res, intervals[i])
+			j++
+		}
+	}
+	return res
 }

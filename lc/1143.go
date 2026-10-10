@@ -34,6 +34,6 @@ package lc
 - text1 和 text2 仅由小写英文字符组成。
 */
 
-func longestCommonSubsequence(text1 string, text2 string) int {
+func LongestCommonSubsequence(text1 string, text2 string) int {
 	panic("TODO")
 }

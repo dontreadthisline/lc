@@ -28,6 +28,6 @@ package lc
 - nums 的任何子数组的乘积都 保证 是一个 32-位 整数
 */
 
-func maxProduct(nums []int) int {
+func MaxProduct(nums []int) int {
 	panic("TODO")
 }

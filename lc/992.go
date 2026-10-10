@@ -31,10 +31,10 @@ package lc
 
 // GoodArrays 好数组的个数
 func GoodArrays(nums []int,k int) int {
-	return atMostKGoodArray(nums, k) - atMostKGoodArray(nums, k-1)
+	return AtMostKGoodArray(nums, k) - AtMostKGoodArray(nums, k-1)
 }
 
-func atMostKGoodArray(nums []int,k int) int {
+func AtMostKGoodArray(nums []int,k int) int {
 	n,res := len(nums),0
 	i,j := 0,0
 	m :=make(map[int]int,k)

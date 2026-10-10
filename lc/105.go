@@ -30,6 +30,6 @@ package lc
 - inorder 保证 为二叉树的中序遍历序列
 */
 
-func buildTree(preorder []int, inorder []int) *TreeNode {
+func BuildTree(preorder []int, inorder []int) *TreeNode {
 	return nil
 }

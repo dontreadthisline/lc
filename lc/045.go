@@ -32,6 +32,6 @@ package lc
 - 题目保证可以到达 n - 1
 */
 
-func jump(nums []int) int {
+func Jump(nums []int) int {
 	panic("TODO")
 }

@@ -35,25 +35,6 @@ package lc
 - p 和 q 均存在于给定的二叉树中。
 */
 
-func lowestCommonAncestor(root *TreeNode, p *TreeNode, q *TreeNode) *TreeNode {
-	//exists定义,如果以node为根节点的树,出现过任意节点,那么返回这个根节点
-	var exists func(*TreeNode,*TreeNode,*TreeNode) *TreeNode
-	exists = func(root *TreeNode,p *TreeNode,q *TreeNode) *TreeNode {
-		if root == nil || root == p || root == q {
-			return root
-		}
-		left := exists(root.Left, p,q)
-		right := exists(root.Right, p,q)
-		if left != nil && right != nil {
-			return root
-		}
-		if left != nil {
-			return left
-		}
-		return right
-	}
-	return exists(root,p,q)
-}
 //  1 (1,1,2)
 // /
 //2

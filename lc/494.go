@@ -36,6 +36,6 @@ package lc
 - -1000 <= target <= 1000
 */
 
-func findTargetSumWays(nums []int, target int) int {
+func FindTargetSumWays(nums []int, target int) int {
 	panic("TODO")
 }

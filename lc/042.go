@@ -23,6 +23,6 @@ package lc
 - 0 <= height[i] <= 10^5
 */
 
-func trap(height []int) int {
+func Trap(height []int) int {
 	panic("TODO")
 }

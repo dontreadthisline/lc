@@ -27,6 +27,6 @@ package lc
 - 1 <= n <= 45
 */
 
-func climbStairs(n int) int {
+func ClimbStairs(n int) int {
 	panic("TODO")
 }

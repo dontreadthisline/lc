@@ -38,6 +38,51 @@ package lc
 - board[i][j] 为 'X' 或 'O'
 */
 
-func solve(board [][]byte) {
-	panic("TODO")
+func Solve(board [][]byte) {
+	m,n := len(board),len(board[0])
+	dirs := [][]int{
+		{-1,0},{0,1},{1,0},{0,-1},
+	}
+	var dfs func(i,j int)
+	dfs = func(r,c int) {
+		board[r][c] = 'S'
+		for _,dir :=range dirs {
+			r1,c1 := dir[0]+r,dir[1]+c
+			if r1 < 0 || c1 < 0 || r1 >= m  || c1 >= n {
+				continue
+			}
+			if board[r1][c1] == 'O' {
+				dfs(r1,c1)
+			}
+		}
+	}
+
+	for _,r := range []int{0,m-1} {
+		for c := range n {
+			if board[r][c] == 'O' {
+				dfs(r,c)
+			}
+		}
+	}
+	for _,c := range[]int{0,n-1} {
+		for r := range m {
+			if board[r][c] == 'O' {
+				dfs(r,c)
+			}
+		}
+	}
+
+	for  i := range m {
+		for j := range n {
+			if board[i][j] == 'O' {
+				board[i][j] = 'X'
+			}
+			if board[i][j] == 'S' {
+				board[i][j] = 'O'
+			}
+		}
+	}
+}
+
+func SolveBFS(board [][]byte) {
 }

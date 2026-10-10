@@ -1,5 +1,7 @@
 package lc
 
+import "math"
+
 /*
 给定一个数组 prices ，它的第 i 个元素 prices[i] 表示一支给定股票第 i 天的价格。
 
@@ -27,6 +29,28 @@ package lc
 - 0 <= prices[i] <= 10^4
 */
 
-func maxProfit(prices []int) int {
-	panic("TODO")
+func MaxProfit(prices []int) int {
+	maxProfit,minPrice := 0, math.MaxInt
+	for _,price := range prices {
+		minPrice = min(price,minPrice)
+		if profit := price - minPrice ; profit > maxProfit {
+			maxProfit = profit
+		}
+	}
+	return maxProfit
 }
+
+func MaxProfitBruteSearch(prices []int) int {
+	maxProfit := 0
+	for i,price := range prices {
+		//有没有办法吧当前的最小值记录下来?
+		for j := i ; j >= 0; j-- {
+			if profit := price -prices[j] ; profit > maxProfit {
+				maxProfit = profit
+			}
+		}
+	}
+	return maxProfit
+}
+
+

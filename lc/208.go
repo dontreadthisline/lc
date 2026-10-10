@@ -7,9 +7,9 @@ Trie（发音类似 "try"）或者说 前缀树 是一种树形数据结构，�
 
 - Trie() 初始化前缀树对象。
 
-- void insert(String word) 向前缀树中插入字符串 word 。
+- void Insert(String word) 向前缀树中插入字符串 word 。
 
-- boolean search(String word) 如果字符串 word 在前缀树中，返回 true（即，在检索之前已经插入）；否则，返回 false 。
+- boolean Search(String word) 如果字符串 word 在前缀树中，返回 true（即，在检索之前已经插入）；否则，返回 false 。
 
 - boolean startsWith(String prefix) 如果之前已经插入的字符串 word 的前缀之一为 prefix ，返回 true ；否则，返回 false 。
 
@@ -23,12 +23,12 @@ Trie（发音类似 "try"）或者说 前缀树 是一种树形数据结构，�
 
 解释
 Trie trie = new Trie();
-trie.insert("apple");
-trie.search("apple");   // 返回 True
-trie.search("app");     // 返回 False
+trie.Insert("apple");
+trie.Search("apple");   // 返回 True
+trie.Search("app");     // 返回 False
 trie.startsWith("app"); // 返回 True
-trie.insert("app");
-trie.search("app");     // 返回 True
+trie.Insert("app");
+trie.Search("app");     // 返回 True
 
 提示：
 
@@ -50,21 +50,21 @@ func NewTrie() *Trie {
 }
 
 func (t *Trie) Insert(word string) {
-	insert(t,word)
+	Insert(t,word)
 }
 
 
 func (t *Trie) Search(word string) bool {
-	node := search(t,word)
+	node := Search(t,word)
 	return node != nil && node.end
 }
 
 func (t *Trie) StartsWith(prefix string) bool {
-	node := search(t, prefix )
+	node := Search(t, prefix )
 	return node != nil
 }
 
-func insert(t *Trie,word string) {
+func Insert(t *Trie,word string) {
 	if word == "" {
 		return
 	}
@@ -79,7 +79,7 @@ func insert(t *Trie,word string) {
 	t.end = true
 }
 
-func search(t *Trie, word string) *Trie {
+func Search(t *Trie, word string) *Trie {
 	for i := range len(word) {
 		idx := word[i] - 'a'
 		if t == nil  || t.children[idx] == nil {

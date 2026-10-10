@@ -24,6 +24,6 @@ package lc
 - nums 中的所有元素 互不相同
 */
 
-func subsets(nums []int) [][]int {
+func Subsets(nums []int) [][]int {
 	panic("TODO")
 }

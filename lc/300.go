@@ -32,6 +32,6 @@ package lc
 - 你能将算法的时间复杂度降低到 O(n log(n)) 吗?
 */
 
-func lengthOfLIS(nums []int) int {
+func LengthOfLIS(nums []int) int {
 	panic("TODO")
 }

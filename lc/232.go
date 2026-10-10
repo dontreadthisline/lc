@@ -48,27 +48,48 @@ myQueue.empty(); // return false
 - 你能否实现每个操作均摊时间复杂度为 O(1) 的队列？换句话说，执行 n 个操作的总时间复杂度为 O(n) ，即使其中一个操作可能花费较长时间。
 */
 
-// 注意: 构造器按仓库惯例改名 NewXxx（同包内多个 Constructor 会重名冲突）
-type MyStack struct {
-	// TODO
+//基础实现,均摊复杂度不是o(1) (n * 1 + n * n ) / n = n + 1 均摊复杂度是o(n)
+
+type MyQueue struct {
+	stack *Stack[int]
+	back *Stack[int]
 }
 
-func NewMyStack() *MyStack {
-	panic("TODO")
+func NewMyQueue() *MyQueue {
+	return &MyQueue{
+		stack:NewStack[int](),
+		back:NewStack[int](),
+	}
 }
 
-func (s *MyStack) Push(x int) {
-	panic("TODO")
+func (q *MyQueue) Push(x int) {
+	q.stack.Push(x)
 }
 
-func (s *MyStack) Pop() int {
-	panic("TODO")
+func (q *MyQueue) Pop() int {
+	for q.stack.Len() != 1 {
+		q.back.Push(q.stack.Pop())
+	}
+	item := q.stack.Pop()
+	for !q.back.Empty() {
+		q.stack.Push(q.back.Pop())
+	}
+	return item
 }
 
-func (s *MyStack) Top() int {
-	panic("TODO")
+func (q *MyQueue) Peek() int {
+
+	for q.stack.Len() != 1 {
+		q.back.Push(q.stack.Pop())
+	}
+
+	item := q.stack.Peek()
+	for !q.back.Empty() {
+		q.stack.Push(q.back.Pop())
+	}
+	return item
 }
 
-func (s *MyStack) Empty() bool {
-	panic("TODO")
+func (q *MyQueue) Empty() bool {
+	return q.stack.Empty()
 }

@@ -27,7 +27,20 @@ package lc
 - 1 <= bad <= n <= 2^31 - 1
 */
 
+func FirstBadVersion(n int) int {
+	l,r := 1,n
+	for l < r {
+		mid := l + (r-l) / 2
+		if isBadVersion(mid) {
+			r = mid
+		} else {
+			l = mid + 1
+		}
+	}
+	return l
+}
+
 // isBadVersion 由力扣平台提供（练习时自行 mock）
-func firstBadVersion(n int) int {
-	panic("TODO")
+func isBadVersion(n int) bool {
+	return true
 }

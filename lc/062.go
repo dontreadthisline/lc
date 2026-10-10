@@ -39,6 +39,6 @@ package lc
 - 题目数据保证答案小于等于 2 * 10^9
 */
 
-func uniquePaths(m int, n int) int {
+func UniquePaths(m int, n int) int {
 	panic("TODO")
 }

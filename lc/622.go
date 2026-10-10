@@ -44,45 +44,58 @@ circularQueue.Rear();  // 返回 4
 */
 
 type MyCircularQueue struct {
-	ring []int
-	first int
-	last int
+	ring     []int
+	first    int
+	last     int
 	capacity int
+	size     int
 }
 
 func NewMyCircularQueue(k int) *MyCircularQueue {
 	return &MyCircularQueue{
-		ring:make([]int,k),
-		first:0,
-		last:0,
-		capacity:k,
+		ring:     make([]int, k),
+		first:    0,
+		last:     0,
+		capacity: k,
+		size:     0,
 	}
 }
 
-func (q *MyCircularQueue) Front() int {
+func (q *MyCircularQueue) Head() int {
 	return q.ring[q.first]
 }
 
-func (q *MyCircularQueue) Rear() int {
-	return q.ring[q.last]
+func (q *MyCircularQueue) Tail() int {
+	return q.ring[(q.last+q.capacity-1)%q.capacity]
 }
 
-func (q *MyCircularQueue) EnQueue(value int) bool {
-	if q.IsFull() {
+func (q *MyCircularQueue) EnQueue(item int) bool {
+	if q.size == q.capacity {
 		return false
 	}
-	//more op in here
+	q.ring[q.last] = item
+	q.last = (q.last + 1) % q.capacity
+	q.size += 1
 	return true
 }
 
 func (q *MyCircularQueue) DeQueue() bool {
-	panic("TODO")
+	if q.size == 0 {
+		return false
+	}
+	q.first = (q.first + 1) % q.capacity
+	q.size -= 1
+	return true
 }
 
-func (q *MyCircularQueue) IsEmpty() bool {
-	return q.first == q.last
+func (q *MyCircularQueue) Empty() bool {
+	return q.size == 0
 }
 
 func (q *MyCircularQueue) IsFull() bool {
-	return false
+	return q.size == q.capacity
+}
+
+func (q *MyCircularQueue) Len() int {
+	return q.size
 }

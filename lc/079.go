@@ -35,6 +35,7 @@ package lc
 进阶：你可以使用搜索剪枝的技术来优化解决方案，使其在 board 更大的情况下可以更快解决问题？
 */
 
-func exist(board [][]byte, word string) bool {
-	panic("TODO")
+func Exist(board [][]byte, word string) bool {
+	
+	return false
 }

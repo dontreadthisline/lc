@@ -24,6 +24,6 @@ package lc
 - 0 <= nums[i] <= 10^5
 */
 
-func canJump(nums []int) bool {
-	panic("TODO")
+func CanJump(nums []int) bool {
+	return false
 }

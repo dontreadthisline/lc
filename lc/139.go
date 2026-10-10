@@ -36,6 +36,6 @@ package lc
 - wordDict 中的所有字符串 互不相同
 */
 
-func wordBreak(s string, wordDict []string) bool {
+func WordBreak(s string, wordDict []string) bool {
 	panic("TODO")
 }

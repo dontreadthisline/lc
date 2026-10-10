@@ -24,6 +24,6 @@ package lc
 - -100 <= matrix[i][j] <= 100
 */
 
-func spiralOrder(matrix [][]int) []int {
+func SpiralOrder(matrix [][]int) []int {
 	panic("TODO")
 }

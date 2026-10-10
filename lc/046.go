@@ -27,6 +27,24 @@ package lc
 - nums 中的所有整数 互不相同
 */
 
-func permute(nums []int) [][]int {
-	panic("TODO")
+func Permute(nums []int) [][]int {
+	res := make([][]int,0,len(nums))
+	res = append(res,[]int{})
+	var dfs func(int)
+	n := len(nums)
+	dfs = func(start int) {
+		if start >= n {
+			return
+		}
+	}
+	dfs(0)
+	return res
 }
+
+func Factorial(n int) int {
+	if n <= 1 {
+		return 1
+	}
+	return n * Factorial(n-1)
+}
+

@@ -25,21 +25,21 @@ package lc
 */
 
 func SortArray(nums []int) []int {
-	quickSort(nums,0,len(nums) -1)
+	QuickSort(nums,0,len(nums) -1)
 	return nums
 }
 
 //quickSort 手写快排
-func quickSort(nums []int,l,r int) {
+func QuickSort(nums []int,l,r int) {
 	if l >= r {
 		return
 	}
-	p := partation(nums,l,r)
-	quickSort(nums,l,p-1)
-	quickSort(nums,p+1,r)
+	p := Partation(nums,l,r)
+	QuickSort(nums,l,p-1)
+	QuickSort(nums,p+1,r)
 }
 
-func partation(nums []int,l,r int) int {
+func Partation(nums []int,l,r int) int {
 	p1,p2 := l,l
 	pivot := nums[r]
 	for ; p2 <= r; p2++ {

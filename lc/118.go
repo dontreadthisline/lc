@@ -20,6 +20,6 @@ package lc
 - 1 <= numRows <= 30
 */
 
-func generate(numRows int) [][]int {
+func Generate(numRows int) [][]int {
 	panic("TODO")
 }

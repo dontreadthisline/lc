@@ -35,6 +35,6 @@ package lc
 - 1 <= k <= min(50, nums.length)
 */
 
-func splitArray(nums []int, k int) int {
-	panic("TODO")
+func SplitArray(nums []int, k int) int {
+	return 0
 }

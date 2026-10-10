@@ -35,6 +35,6 @@ package lc
 - 0 <= prices[i] <= 10^4
 */
 
-func maxProfitII(prices []int) int {
+func MaxProfitII(prices []int) int {
 	panic("TODO")
 }
