@@ -1,6 +1,9 @@
 package lc
 
-import "slices"
+import (
+	"fmt"
+	"slices"
+)
 
 /*
 给定一个区间的集合 intervals ，其中 intervals[i] = [start_i, end_i] 。返回 *需要移除区间的最小数量，使剩余区间互不重叠 *。
@@ -36,8 +39,9 @@ import "slices"
 
 func EraseOverlapIntervals(intervals [][]int) int {
 	slices.SortFunc(intervals,  func(a, b []int) int {
-		return a[1] - b[1]
+		return a[0] - b[0]
 	})
+	fmt.Println(intervals)
 	cnt ,n:= 0,len(intervals)
 	for i,j := 0,1; j < n; j++ {
 		if intervals[i][1] > intervals[j][0] {
@@ -46,6 +50,5 @@ func EraseOverlapIntervals(intervals [][]int) int {
 			i += 1
 		}
 	}
-	//输出重叠区间的个数,剩余的就是不重叠的
-	return n - cnt
+	return cnt
 }

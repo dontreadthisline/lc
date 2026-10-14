@@ -21,5 +21,34 @@ package lc
 */
 
 func Partition(s string) [][]string {
-	panic("TODO")
+	var res [][]string
+	var dfs func(int,[]int)
+	n := len(s)
+	dfs = func(start int,path []int) {
+		if start >= n {
+		}
+		dfs(start+1,append(path,start+1))//切
+		dfs(start+1,path)
+	}
+
+	dfs(-1,[]int{})
+	return res
+}
+
+func collect(s string,path []int) []string {
+	l := len(path)
+	res := make([]string,0,l+1)
+	if len(path) == 0 {
+		res = append(res,s)
+	}
+	for i := range l {
+		if i == 0 {
+			res = append(res,s[:path[0]])
+		} else if i == l - 1 {
+			res = append(res,s[path[i]:])
+		} else  {
+			res = append(res,s[i:i+1])
+		}
+	}
+	return res
 }

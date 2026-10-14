@@ -16,12 +16,16 @@ func (l *ListNode) String() string {
 		return ""
 	}
 	buf := strings.Builder{}
-	for ; l != nil; l = l.Next {
+	// 防环: 最多打印 64 个节点, 超出说明链表带环(或异常长), 截断并标记
+	for i := 0; l != nil && i < 64; l, i = l.Next, i+1 {
 		if l.Next == nil {
 			buf.WriteString(fmt.Sprintf("%d", l.Val))
 		} else {
 			buf.WriteString(fmt.Sprintf("%d->", l.Val))
 		}
+	}
+	if l != nil {
+		buf.WriteString("...(cycle?)")
 	}
 	return buf.String()
 }

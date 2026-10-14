@@ -21,6 +21,7 @@ func PathSum(root *TreeNode, targetSum int) int {
 		}
 		dfs(root.Left,path)
 		dfs(root.Right,path)
+		//这里从来没有 path = path[0:len(path)-1]
 	}
 	dfs(root,[]int{})
 	return cnt

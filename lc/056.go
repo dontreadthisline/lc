@@ -41,7 +41,8 @@ func MergeRange(intervals [][]int) [][]int {
 	res = append(res, intervals[0])
 	for ; i < n; i++ {
 		if intervals[i][0] <= res[j][1] {
-			res[j] = []int{res[j][0],intervals[i][1]}
+			res[j] = []int{res[j][0],max(intervals[i][1],res[j][1])}
+			//res[j] = []int{res[j][0],intervals[i][1]}
 		} else {
 			res = append(res, intervals[i])
 			j++

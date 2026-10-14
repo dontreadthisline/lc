@@ -33,5 +33,19 @@ package lc
 */
 
 func LengthOfLIS(nums []int) int {
-	panic("TODO")
+	n := len(nums)
+	dp := make([]int,n)
+	dp[0] = 1
+	res := 1
+	for i := 1; i < n; i++ {
+		m := 0
+		for j := i - 1; j >= 0; j-- {
+			if nums[i] > nums[j] && dp[j] > m {
+				m = dp[j]
+			}
+		}
+		dp[i] = m + 1
+		res = max(res,dp[i])
+	}
+	return res
 }

@@ -36,9 +36,11 @@ package lc
 - 1 <= m, n <= 300
 
 - grid[i][j] 的值为 '0' 或 '1'
+../lc/079.go
 */
 
 func NumIslands(grid [][]byte) int {
+
 	m,n := len(grid),len(grid[0])
 	dirs := [][]int{
 		{-1,0},{0,1},{1,0},{0,-1},
@@ -51,15 +53,13 @@ func NumIslands(grid [][]byte) int {
 
 	var dfs func(r int,c int)
 	dfs = func(r int,c int) {
-
+		if grid[r][c] == '0' { //无路径
+			return
+		}
 		visited[r][c] = true
 		for _,dir := range dirs {
 			r1,c1 := dir[0] + r,dir[1] + c
-			if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n { //边界
-				continue 
-			}
-			
-			if visited[r1][c1] || grid[r1][c1] == '0' { //已访问或者本身不可达
+			if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n || visited[r1][c1] { //边界
 				continue
 			}
 			dfs(r1,c1)
@@ -67,8 +67,8 @@ func NumIslands(grid [][]byte) int {
 	}
 
 	cnt := 0
-	for i := 0; i < m; i++ {
-		for j := 0; j < n; j++ {
+	for i := range m {
+		for j := range n {
 			if grid[i][j] == '1' && !visited[i][j] {
 				dfs(i,j)
 				cnt++
@@ -90,29 +90,30 @@ func NumIslandsBFS(grid [][]byte) int {
 		visited[i] = make([]bool,n)
 	}
 
-	var bfs func(r,c int)
-	bfs = func(r,c int) {
+	bfs := func(r,c int) {
 		queue := [][]int{{r,c}}
 		visited[r][c] = true
 		for len(queue) > 0 {
-			r,c := queue[0][0],queue[0][1] //出队访问
-			for _,dir := range dirs {
-				r1,c1 := dir[0] + r,dir[1] + c
-				if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n { //边界
-					continue
+			for  range len(queue) {
+				r,c := queue[0][0],queue[0][1] //出队访问
+				for _,dir := range dirs {
+					r1,c1 := dir[0] + r,dir[1] + c
+					if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n { //边界
+						continue
+					}
+					if visited[r1][c1] || grid[r1][c1] == '0' {//已访问或者本身不可达
+						continue
+					}
+					queue = append(queue,[]int{r1,c1})
+					visited[r1][c1] = true //入队就标访问,这样会保险一些
 				}
-				if visited[r1][c1] || grid[r1][c1] == '0' {//已访问或者本身不可达
-					continue
-				}
-				queue = append(queue,[]int{r1,c1})
-				visited[r1][c1] = true //入队就标访问,这样会保险一些
+				queue = queue[1:]
 			}
-			queue = queue[1:len(queue)]
 		}
 	}
 	cnt := 0
-	for i := 0; i < m; i++ {
-		for j := 0; j < n; j++ {
+	for i := range m {
+		for j := range n {
 			if grid[i][j] == '1' && !visited[i][j] {
 				bfs(i,j)
 				cnt++

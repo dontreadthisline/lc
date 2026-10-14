@@ -49,7 +49,6 @@ numMatrix.sumRegion(1, 2, 2, 4); // return 12 (蓝色矩形框的元素总和)
 - 最多调用 10^4 次 sumRegion 方法
 */
 
-// 注意: 构造器按仓库惯例改名 NewXxx（同包内多个 Constructor 会重名冲突）
 
 type NumMatrix struct {
 	prefixSum map[int]int

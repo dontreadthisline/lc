@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>回溯可视化 — 全排列 × 组合的决策树 (LeetCode 46 / 77)</title>
+<style>
+  :root {
+    --choose: #16a34a;      /* 选择 绿 */
+    --descend: #2563eb;     /* 递归深入 蓝 */
+    --undo: #ea580c;        /* 撤销 橙 */
+    --prune: #dc2626;       /* 剪枝 红 */
+    --result: #059669;      /* 收获 深绿 */
+    --ink: #1e293b; --muted: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f6f7f9; color: var(--ink); line-height: 1.65; padding: 24px;
+  }
+  header { max-width: 1240px; margin: 0 auto 18px; }
+  header h1 { font-size: 22px; }
+  header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  main { max-width: 1240px; margin: 0 auto; display: grid; gap: 18px; }
+  .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .controls select, .controls button {
+    padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1;
+    background: #fff; font-size: 13px; cursor: pointer; color: var(--ink);
+  }
+  .controls button:hover { background: #f1f5f9; }
+  .controls button.primary { background: var(--descend); color: #fff; border-color: var(--descend); }
+  .controls button.primary:hover { background: #1d4ed8; }
+  .controls label { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .controls input[type=range] { accent-color: var(--descend); }
+
+  .stage { display: flex; gap: 20px; margin-top: 14px; flex-wrap: wrap; }
+  .treebox { flex: 1 1 560px; min-width: 480px; }
+  .treebox h3 { font-size: 14px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  figure { text-align: center; }
+  figure svg { max-width: 100%; height: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+  .sidebar { flex: 0 1 340px; min-width: 300px; display: grid; gap: 12px; align-content: start; }
+  .box { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; }
+  .box h4 { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+  .curRow { display: flex; gap: 6px; min-height: 44px; align-items: center; flex-wrap: wrap; }
+  .curCell {
+    width: 40px; height: 40px; border-radius: 8px; background: var(--choose); color: #fff;
+    font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    animation: pop .25s;
+  }
+  .curCell.idx { background: #fff; color: var(--muted); border: 2px dashed #cbd5e1; font-size: 12px; }
+  .curEmpty { color: #94a3b8; font-size: 12px; }
+  @keyframes pop { 50% { transform: scale(1.25); } }
+
+  .startCard {
+    display: flex; gap: 12px; align-items: center; padding: 8px 12px;
+    background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe;
+  }
+  .startCard .big { font-size: 26px; font-weight: 800; color: var(--descend); min-width: 40px; text-align: center; }
+  .startCard .desc { font-size: 12px; color: var(--muted); }
+  .usedRow { display: flex; gap: 6px; }
+  .usedCell {
+    flex: 1; height: 34px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff;
+    font-size: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--muted); transition: all .15s;
+  }
+  .usedCell.on { background: var(--choose); border-color: var(--choose); color: #fff; font-weight: 700; }
+  .usedCell .tag { font-size: 9px; }
+
+  .resultRow { display: flex; flex-wrap: wrap; gap: 6px; min-height: 36px; }
+  .resultChip {
+    padding: 4px 10px; border-radius: 99px; background: #d1fae5; color: #065f46;
+    font-size: 13px; font-weight: 700; animation: pop .3s; font-variant-numeric: tabular-nums;
+  }
+  .resultCount { font-size: 12px; color: var(--muted); align-self: center; }
+
+  .cmpBar {
+    margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: #fef2f2;
+    border: 1px solid #fecaca; font-size: 13px; color: #7f1d1d;
+  }
+  .cmpBar b { color: var(--prune); }
+
+  .contrapanel { margin-top: 16px; display: none; }
+  .contrapanel h3 { font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .contrapanel h3 .r { margin-left: 6px; color: var(--prune); font-weight: 700; }
+
+  .code-panel { margin-top: 14px; }
+  .code-panel h4 { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  .code {
+    background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 12px 0;
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; overflow-x: auto;
+  }
+  .code .ln { display: flex; padding: 1px 14px; white-space: pre; border-left: 4px solid transparent; }
+  .code .ln .no { width: 2.2em; color: #475569; user-select: none; }
+  .code .ln.hl { background: rgba(37,99,235,.30); border-left-color: var(--descend); }
+  .code .ln.ch { background: rgba(22,163,74,.28); border-left-color: var(--choose); }
+  .code .ln.un { background: rgba(234,88,12,.28); border-left-color: var(--undo); }
+  .code .ln.pr { background: rgba(220,38,38,.25); border-left-color: var(--prune); }
+  .code .cm { color: #64748b; }
+
+  .log-panel { margin-top: 14px; }
+  .log-panel h4 { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  .log {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+    height: 160px; overflow-y: auto; padding: 10px 12px; font-size: 12.5px; font-family: Menlo, monospace;
+  }
+  .log .choose { color: var(--choose); font-weight: 600; }
+  .log .undo { color: var(--undo); font-weight: 600; }
+  .log .skip { color: var(--prune); }
+  .log .found { color: var(--result); font-weight: 700; }
+  .log .enter { color: var(--descend); }
+  .log .finish { font-weight: 700; }
+  .log div { padding: 1px 0; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tabs button {
+    padding: 7px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff;
+    font-size: 13px; cursor: pointer; color: var(--muted);
+  }
+  .tabs button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .tabbody > div { display: none; }
+  .tabbody > div.active { display: block; }
+  .tabbody h3 { font-size: 16px; margin: 10px 0 8px; }
+  .tabbody ol, .tabbody ul { padding-left: 22px; margin: 8px 0; }
+  .tabbody li { margin: 7px 0; font-size: 14px; }
+  .tabbody code {
+    background: #f1f5f9; border-radius: 5px; padding: 1px 6px;
+    font-family: Menlo, monospace; font-size: 12.5px; color: #be185d;
+  }
+  .tabbody pre {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 12px 14px; font-size: 12px; font-family: Menlo, monospace;
+    overflow-x: auto; line-height: 1.5; margin: 10px 0;
+  }
+  .keybox { border-left: 4px solid var(--descend); background: #eff6ff; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: 14px; }
+  .keybox.green { border-left-color: var(--choose); background: #f0fdf4; }
+  .keybox.orange { border-left-color: var(--undo); background: #fff7ed; }
+  .warnbox { border-left: 4px solid var(--prune); background: #fef2f2; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: 14px; }
+  table.cmp { border-collapse: collapse; margin: 10px 0; font-size: 13px; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid #e2e8f0; padding: 6px 10px; text-align: left; }
+  table.cmp th { background: #f8fafc; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>回溯可视化 — 全排列 × 组合的决策树（LeetCode 46 / 77）</h1>
+  <p>排列模式：选择/递归/撤销三件套。组合模式：start 哨兵递增剪枝 + 红色虚边标出「排列引擎会走、组合引擎剪掉」的降序路径 —— C(n,k) = P(n,k)/k! 的树上演义。</p>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="controls">
+      <label>模式
+        <select id="modeSel">
+          <option value="permute" selected>46 全排列</option>
+          <option value="combine">77 组合</option>
+          <option value="subsets">78 子集</option>
+        </select>
+      </label>
+      <label id="kWrap" style="display:none">k
+        <select id="kSel">
+          <option>1</option>
+          <option selected>2</option>
+          <option>3</option>
+        </select>
+      </label>
+      <label>n
+        <select id="nSel">
+          <option>2</option>
+          <option selected>3</option>
+          <option>4</option>
+          <option>5</option>
+        </select>
+      </label>
+      <button class="primary" id="btnPlay">播放</button>
+      <button id="btnStep">单步</button>
+      <button id="btnReset">重置</button>
+      <label>速度 <input type="range" id="speed" min="1" max="10" value="5"></label>
+      <button id="btnUndo">忘撤销对照: 关</button>
+    </div>
+
+    <div class="stage">
+      <div class="treebox">
+        <h3 id="treeTitle">决策树（根在左，向右生长；当前路径 = 根到高亮节点）</h3>
+        <figure id="treeMain"></figure>
+        <div class="legend" id="legendBox">
+          <span><i class="dot" style="background:#cbd5e1"></i>未探索</span>
+          <span><i class="dot" style="background:#93c5fd"></i>当前路径上</span>
+          <span><i class="dot" style="background:#bfdbfe;border:2px solid #2563eb"></i>当前位置</span>
+          <span><i class="dot" style="background:#d1fae5"></i>已收获</span>
+          <span><i class="dot" style="background:#fecaca"></i>剪枝跳过</span>
+        </div>
+        <div class="cmpBar" id="cmpBar" style="display:none"></div>
+      </div>
+
+      <div class="sidebar">
+        <div class="box" id="startBox" style="display:none">
+          <h4>start（哨兵：上一项）</h4>
+          <div class="startCard">
+            <div class="big" id="startVal">0</div>
+            <div class="desc">start = 0 表示空集（假想的上一项）；非 0 = path 的末元素。<br>准入条件：<b>i &gt; start</b> —— 只准递增。</div>
+          </div>
+        </div>
+        <div class="box">
+          <h4 id="curTitle">cur（共享活路径）</h4>
+          <div class="curRow" id="curRow"></div>
+        </div>
+        <div class="box" id="usedBox">
+          <h4>used（占位表）</h4>
+          <div class="usedRow" id="usedRow"></div>
+        </div>
+        <div class="box">
+          <h4 id="resTitle">results（收获的排列）</h4>
+          <div class="resultRow" id="resultRow"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="contrapanel" id="contraPanel">
+      <h3>忘撤销对照（删掉 used 的复原行再跑）<span class="r" id="contraResult"></span></h3>
+      <figure id="treeContra"></figure>
+      <p style="font-size:13px;color:var(--muted)">used 是真共享数组（底层内存只有一份）——忘记复原时，回退层的候选全部被占用，树只剩一条路。</p>
+    </div>
+
+    <div class="code-panel">
+      <h4>同步伪代码（与你的实现对齐；颜色 = 帧类型：蓝=递归 绿=选择 橙=撤销 红=剪枝）</h4>
+      <div class="code" id="code"></div>
+    </div>
+
+    <div class="log-panel">
+      <h4>执行日志</h4>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+
+  <!-- ============ 论证区 ============ -->
+  <section class="panel">
+    <div class="tabs">
+      <button class="active" data-tab="t1">三件套各干什么</button>
+      <button data-tab="t2">为什么撤销不能省</button>
+      <button data-tab="t3">排列 × 组合：C = P / k!</button>
+      <button data-tab="t4">回溯是通用引擎</button>
+      <button data-tab="t5">解空间的图结构</button>
+      <button data-tab="t6">单路径判定的分野</button>
+      <button data-tab="t7">免撤销的证明:裁环</button>
+    </div>
+    <div class="tabbody">
+      <div class="active" id="t1">
+        <h3>选择 / 递归 / 撤销：对共享状态的增量维护与复原</h3>
+        <div class="keybox">
+          状态分两类：<b>path（append 传参版无需回退）</b>和 <b>used（共享数组必须回退）</b>。判断标准就一条：这个状态的修改发生在哪一帧、谁还会读它。
+        </div>
+        <ol>
+          <li><b>选择</b>：<code>used[i] = true</code> + 把 <code>append(path, i)</code> 的新 header 传下去。append 结果直接当实参时，本帧 path 变量从未被赋值 —— 所以 path 不需要显式回退（这正是 437 树遍历不需要撤销的机制）。</li>
+          <li><b>递归</b>：带着共享的 used 和新的 path 视图深入，让下一层在「i 已占用」的世界里做选择。</li>
+          <li><b>撤销</b>：<code>used[i] = false</code>。used 的底层数组全局只有一份，本帧 for 的下一个候选要读它 —— 不复原就是公共财产被永久侵占。</li>
+        </ol>
+        <div class="keybox orange">
+          path 与 used 的不对称不是玄学：<b>path 的"长度视图"每帧私有（值传递），used 的底层数组全体共享（引用语义）</b>。回退义务跟共享走，不跟参数走。
+        </div>
+      </div>
+
+      <div id="t2">
+        <h3>实验：忘掉 used 的复原（勾选「忘撤销对照」）</h3>
+        <div class="warnbox">
+          症状：只输出 1 个结果（字典序第一个）。不报错、不死循环，安静地错。
+        </div>
+        <p>机理：第一条路径走完后 used 全 true；每个栈帧的 for 里所有候选在准入判断处被跳过，候选全部枯死。对照动画里第二棵树只剩一条孤路。</p>
+        <h3>为什么不重不漏</h3>
+        <ul>
+          <li><b>不重</b>：排列 —— used 剪掉重复；组合 —— 递增剪掉同一集合的所有降序写法。每个答案对应树上唯一一条根到叶路径。</li>
+          <li><b>不漏</b>：for 枚举全部候选；撤销保证每个候选开局时世界一致。</li>
+        </ul>
+      </div>
+
+      <div id="t3">
+        <h3>组合树 = 排列树 + 升序规范化剪枝</h3>
+        <div class="keybox">
+          组合是集合，集合无序；在决策树里表示它必须约定规范写法 —— <b>升序</b>。同一集合的 k! 种排列写法，只保留升序那一条代表路径。这就是 C(n,k) = P(n,k)/k! 的字面意思。
+        </div>
+        <pre>n=4, k=2 两棵树:
+
+   排列树: 每层任选未用过的              组合树: 只准选比上一项大
+   12 条路径 = P(4,2)                   6 条路径 = C(4,2)
+
+   root                                  root
+   ├─1─┬─2 [1,2]                         ├─1─┬─2 [1,2]
+   │   ├─3 [1,3]                         │   ├─3 [1,3]
+   │   └─4 [1,4]                         │   └─4 [1,4]
+   ├─2─┬─1 [2,1] ←同{1,2}!               ├─2─┬─3 [2,3]
+   │   ├─3 [2,3]                         │   └─4 [2,4]
+   │   └─4 [2,4]                         └─3───4 [3,4]
+   ├─3─┬─1 [3,1] ←同{1,3}!
+   │   ├─2 [3,2] ←同{2,3}!
+   │   └─4 [3,4]
+   └─4─┬─1 [4,1] ←同{1,4}!
+       ├─2 [4,2] ←同{2,4}!
+       └─3 [4,3] ←同{3,4}!</pre>
+        <p>组合模式动画里的<b>红色虚边（带 ×）</b>就是左边被剪掉的那些降序边：节点 [2] 的候选 1、节点 [3] 的候选 1 和 2、节点 [4] 的候选 1、2、3 —— 分布恰好是「下三角」。每个终集合的 k! 条排列路只剩升序一条。</p>
+        <ul>
+          <li><b>start 哨兵</b>：入口 <code>backtrack(0, [])</code>，0 不在值域 —— 它的身份是「假想的上一项」，表示空集。链表 dummy 节点、前缀和 preSum[0]=0 都是同一技巧：用值域外的占位表示空状态。</li>
+          <li><b>used 在组合里冗余</b>：递增保证 i 永远往前走，同一值不可能重复入选。留着无害（每帧 O(n) 扫描的常数），去掉更诚实。</li>
+          <li><b>78 子集 = 这棵树的所有节点</b>：组合只收固定深度 k 的叶子，子集每个节点都收 —— 同一个递增引擎，一处收获条件的差别。</li>
+        </ul>
+      </div>
+
+      <div id="t5">
+        <h3>解空间图：同一组元素张成的两种图</h3>
+        <div class="keybox">
+          决策树的节点是<b>路径</b>（所以有 n! 个节点）；解空间图的节点是<b>元素本身</b>（永远只有 n 个）。图上的一条路径才是一个候选解。回溯 = 在解空间图上 DFS 枚举满足约束的路径。
+        </div>
+        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:12px">
+          <div style="flex:1 1 380px; border:1px solid #e2e8f0; border-radius:10px; padding:12px">
+            <h4 style="font-size:14px; margin-bottom:4px">排列 = 无向完全图 K<sub>n</sub>（哈密顿路径枚举）</h4>
+            <p style="font-size:12.5px; color:var(--muted)">任何元素可接任何元素（边无向）→<b>重访诱惑存在</b> → 需要 visited 执法「每点恰一次」。哈密顿路径数 = 4! = 24。</p>
+            <label style="font-size:13px">选一条路径: <select id="permPathSel"></select></label>
+            <figure id="graphK4"></figure>
+            <p id="permPathNote" style="font-size:12.5px"></p>
+          </div>
+          <div style="flex:1 1 380px; border:1px solid #e2e8f0; border-radius:10px; padding:12px">
+            <h4 style="font-size:14px; margin-bottom:4px">组合/子集 = 递增 DAG（有向路径枚举）</h4>
+            <p style="font-size:12.5px; color:var(--muted)">边只从小的指向大的（i→j 仅当 i&lt;j）→<b>方向天然禁止回头</b> → 不需要 visited。k 节点路径 = C(4,k)；任意长度 = 2⁴ = 16。</p>
+            <label style="font-size:13px">选一条路径: <select id="dagPathSel"></select></label>
+            <figure id="graphDAG"></figure>
+            <p id="dagPathNote" style="font-size:12.5px"></p>
+          </div>
+        </div>
+        <table class="cmp" style="margin-top:14px">
+          <tr><th>解空间结构</th><th>重访可能</th><th>visited</th><th>例子</th></tr>
+          <tr><td>DAG（方向蕴含无重复）</td><td>不可能（无反向边）</td><td>不需要，成员资格被 start 标量压缩</td><td>77 组合、78 子集</td></tr>
+          <tr><td>一般图简单路径约束</td><td>可能（边无向）</td><td>需要 + 撤销（执法「每点恰一次」）</td><td>46 排列（K_n 哈密顿）、79 单词、51 皇后</td></tr>
+          <tr><td>覆盖遍历给定图</td><td>重复访问无意义</td><td>需要 + 不撤销（单调）</td><td>200 岛屿、130 区域</td></tr>
+        </table>
+      </div>
+      <div id="t6">
+        <h3>同样找单路径: 127 不需撤销 vs 79 必须 — 差在节点身份</h3>
+        <div class="keybox">
+          127 判定版的节点 = <b>词</b>(每词唯一, 死一次即墓碑永久); 79 判定版的节点 = <b>(格子, 进度, 占用集)三元组</b>(同一格子在树里出现多次, 死活各异)。看右树里两个 (1,1)A: 同格、同进度, 一个死一个活 —— 因为占用集不同。
+        </div>
+        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:12px">
+          <div style="flex:1 1 400px; border:1px solid #e2e8f0; border-radius:10px; padding:12px">
+            <h4 style="font-size:14px">127 单词接龙: 解空间图(节点=词, 边=差一字母)</h4>
+            <p style="font-size:12.5px; color:var(--muted)">词典 8 词, 入口 = 与 begin(hit) 差一字母的词。<b>四条路径同时显示</b>: 共享边(hit-hot 等)画为平行线, 一线一色。</p>
+            <figure id="graphLadder"></figure>
+            <div id="ladderLegend" style="font-size:12px; margin-top:6px"></div>
+            <p id="ladderPathNote" style="font-size:12.5px"></p>
+          </div>
+          <div style="flex:1 1 420px; border:1px solid #e2e8f0; border-radius:10px; padding:12px">
+            <h4 style="font-size:14px">79 单词搜索: 解空间图(节点=格子, 边=四邻相邻)</h4>
+            <p style="font-size:12.5px; color:var(--muted)">board 与 word。三条候选路径同时显示; 每格上方的彩色序号 = 它在各路径中的位置 —— <b>一格多身份</b>正是必须撤销的原因。</p>
+            <figure id="existGraph"></figure>
+            <div id="existGraphLegend" style="font-size:12px; margin-top:4px"></div>
+            <p id="existGraphNote" style="font-size:12.5px"></p>
+            <hr style="margin:12px 0; border:none; border-top:1px dashed #e2e8f0">
+            <h4 style="font-size:14px">步进动画: DFS 全过程(含撤销关键时刻)</h4>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:8px 0">
+              <label style="font-size:13px">模式
+                <select id="existMode">
+                  <option value="undo" selected>撤销版(正确)</option>
+                  <option value="noundo">不撤销版(漏解)</option>
+                </select>
+              </label>
+              <button id="existPrev" style="padding:4px 10px">上一步</button>
+              <button id="existNext" style="padding:4px 10px">下一步</button>
+              <button id="existReset" style="padding:4px 10px">重置</button>
+            </div>
+            <figure id="existBoard"></figure>
+            <div id="existWordBar" style="margin:8px 0"></div>
+            <div id="existStack" style="font-size:12px; font-family:Menlo; margin:4px 0"></div>
+            <p id="existLog" style="font-size:12.5px; min-height:40px"></p>
+          </div>
+        </div>
+        <table class="cmp" style="margin-top:14px">
+          <tr><th></th><th>127 单词接龙(判定)</th><th>79 单词搜索(判定)</th></tr>
+          <tr><td>节点身份</td><td>词(唯一)</td><td>(格子,进度,占用集)三元组</td></tr>
+          <tr><td>树节点数</td><td>≤ 词典大小</td><td>同格多次出现, 与路径空间同阶</td></tr>
+          <tr><td>失败的性质</td><td>固有属性(可达性, 与来路无关)</td><td>三元组属性(换占用集可翻案)</td></tr>
+          <tr><td>裁环桥</td><td>有(存在路径⟺存在简单路径)</td><td>无(匹配依赖走位顺序)</td></tr>
+          <tr><td>世界结构</td><td>单调收紧 → 首败即终局 → <b>零撤销</b></td><td>随栈呼吸 → 失败可翻案 → <b>必须撤销</b></td></tr>
+        </table>
+      </div>
+      <div id="t7">
+        <h3>免撤销的严格证明 —— 裁环论证</h3>
+        <div class="keybox">
+          正确命题: <b>v 被宣判死时, 不存在任何「需要经过 v 的简单成功路径」</b> —— v 死得清白。<br>
+          核心在「邻居是祖先」那一栏: 经祖先的成功路径必带环, 裁掉环段后它不再经过 v —— 那种成功不需要 v, v 错过它无妨。这就是裁环桥的严格形态。
+        </div>
+        <h3 style="margin-top:14px">根本差异: 两道题的「图」差在哪</h3>
+        <div style="display:flex; gap:16px; flex-wrap:wrap">
+          <div style="flex:1 1 420px; border:1px solid #bbf7d0; background:#f0fdf4; border-radius:10px; padding:12px">
+            <h4 style="font-size:14px; color:#166534">127 词典图: 节点前途在唯一一次探索中被穷尽</h4>
+            <p style="font-size:12.5px">判定版从头到尾只有<b>一条历史</b>(永久 visited → 每词只进一次)。探索 hot 时(栈={hit,hot}):</p>
+            <table class="cmp">
+              <tr><th>出边</th><th>当时状态</th><th>处置</th></tr>
+              <tr><td>dot</td><td>白</td><td>递归探索 ✓</td></tr>
+              <tr><td>lot</td><td>白</td><td>递归探索 ✓</td></tr>
+              <tr><td>hop</td><td>白</td><td>递归探索 ✓</td></tr>
+              <tr><td>hit</td><td>在栈上(来路)</td><td>跳过 —— 经它的成功可裁环, 不需要 hot</td></tr>
+            </table>
+            <p style="font-size:12.5px; margin-top:6px"><b>结论: hot 的命运由这一次探索完全决定</b> —— 出边集合由词典静态决定，被滤掉的边只指向来路(真祖先)，而经祖先的成功裁环后不经过 hot。此后任何时刻不需要再问 hot。不存在「另一个历史的 hot」。</p>
+          </div>
+          <div style="flex:1 1 420px; border:1px solid #fecaca; background:#fef2f2; border-radius:10px; padding:12px">
+            <h4 style="font-size:14px; color:#991b1b">79 网格图: 同一格子在不同历史里两副面孔</h4>
+            <p style="font-size:12.5px">看 (1,1) 的出边 —— 同一格、同进度(w2), <b>仅历史不同</b>:</p>
+            <table class="cmp">
+              <tr><th>出边</th><th>F2 历史(栈={(0,0),(0,1),(1,1)})</th><th>S 历史(栈={(0,0),(1,0),(1,1)})</th></tr>
+              <tr><td>(0,1)</td><td style="color:#dc2626">在栈上(祖先) → <b>禁走</b></td><td style="color:#16a34a">白 → <b>可走, 通向成功!</b></td></tr>
+              <tr><td>(1,0)</td><td>白, 匹配 w3(B) → 走后死</td><td style="color:#dc2626">在栈上(祖先) → 禁走</td></tr>
+              <tr><td>(1,2)</td><td>白, 不匹配 w3 → 滤</td><td>白, 不匹配 w3 → 滤</td></tr>
+            </table>
+            <p style="font-size:12.5px; margin-top:6px"><b>结论: (1,1) 在 F2 里死, 在 S 里活</b> —— 同一格子的「白/祖先」身份随历史翻转。更致命的: S 走 (1,1)→(0,1) 时, (0,1) 在 S 里<b>不是祖先</b>(它是 F2 的祖先!) —— 这不是回边, 没有环, <b>裁无可裁</b>。第一次探索的失败只对那条历史有效。</p>
+          </div>
+        </div>
+        <div class="warnbox" style="margin-top:12px">
+          <b>分界一句话</b>: 127 判定版只活一条历史 —— 节点前途在唯一一次探索中被穷尽(出边静态 + 被滤边只指向真祖先，裁环罩得住)。79 的约束使第一次探索的失败只对那条历史有效 —— 要试新历史就必须归还旧历史占用的格子，<b>这就是撤销</b>。
+        </div>
+        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:12px">
+          <div style="flex:1 1 420px; border:1px solid #e2e8f0; border-radius:10px; padding:12px">
+            <h4 style="font-size:14px">判定版 DFS 全过程(步进)</h4>
+            <p style="font-size:12.5px; color:var(--muted)">图: s→a→{v,end}, v→{d,a(回边)}, d 无出边。v 死后 a 直接走到 end 成功 —— 关键帧演示为什么 v 死得清白。</p>
+            <div style="display:flex; gap:8px; margin:8px 0">
+              <button id="pfPrev" style="padding:4px 10px">上一步</button>
+              <button id="pfNext" style="padding:4px 10px">下一步</button>
+              <button id="pfReset" style="padding:4px 10px">重置</button>
+            </div>
+            <figure id="proofGraph"></figure>
+            <div id="proofStack" style="font-size:12px; font-family:Menlo; margin:4px 0"></div>
+            <p id="proofLog" style="font-size:12.5px; min-height:52px"></p>
+          </div>
+          <div style="flex:1 1 380px; border:1px solid #e2e8f0; border-radius:10px; padding:12px">
+            <h4 style="font-size:14px">79 为什么没有裁环桥</h4>
+            <p style="font-size:12.5px; color:var(--muted)">S 路径 = (0,0)A→(1,0)B→(1,1)A→(0,1)B→(0,2)A = ABABA。试着「裁掉」中途的 (1,1):</p>
+            <figure id="noBridge"></figure>
+            <p style="font-size:12.5px; margin-top:6px">裁掉后剩余字符序列 <b>ABBA ≠ ABABA</b>(第3位错位), 且 (1,0) 与 (0,1) <b>不相邻, 路径本身断裂</b>。匹配进度依赖路径形状 —— 裁剪破坏一切。所以 79 的格子死不能升级为全局死, 必须撤销归还。</p>
+          </div>
+        </div>
+        <table class="cmp" style="margin-top:14px">
+          <tr><th>探索 v 时邻居 w 的状态</th><th>处置</th><th>「经 v→w 的成功路径」为何不需要担心</th></tr>
+          <tr><td>未标记(白)</td><td>递归探索</td><td>归纳: 成功则已 found; 失败则 w 死(不存在经 w 的简单成功路径)</td></tr>
+          <tr><td><b>在栈上(v 的祖先)</b></td><td>跳过</td><td><b>经它的路径必带环 → 裁掉环段 → 成功路径不再经过 v</b>(它不需要 v)</td></tr>
+          <tr><td>已死(墓碑)</td><td>跳过</td><td>归纳: 不存在经 w 的简单成功路径</td></tr>
+        </table>
+        <div class="keybox green" style="margin-top:10px">
+          结论: 三方向都堵死 → 不存在需要 v 的简单成功路径 → v 死得清白 → 永久 visited 不损害「存在成功路径 ⟺ found」。每个节点唯一一次探索, 足以代表全人类。
+        </div>
+      </div>
+      <div id="t4">
+        <h3>回溯是通用引擎：换题只换两件事</h3>
+        <table class="cmp">
+          <tr><th>题目</th><th>候选生成器（for 里枚举什么）</th><th>剪枝/终止条件</th></tr>
+          <tr><td>46 全排列</td><td>所有未占用的下标 i</td><td>k == n 收获</td></tr>
+          <tr><td>77 组合</td><td>从上一项+1 开始（递增）</td><td>凑够 k 个收获</td></tr>
+          <tr><td>78 子集</td><td>同组合</td><td>每个节点都收获</td></tr>
+          <tr><td>22 括号生成</td><td>放 ( 或放 )</td><td>右括号数 ≤ 左括号数</td></tr>
+          <tr><td>51 N 皇后</td><td>本行的每一列</td><td>列/对角线无冲突</td></tr>
+        </table>
+        <p>引擎本体（候选 → 选择 → 递归 → 撤销）一行不改。你的 78 子集测试已经就位。</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+'use strict';
+
+/* ================= 通用工具 ================= */
+function factRange(n, k) { let r = 1; for (let i = 0; i < k; i++) r *= (n - i); return r; } // P(n,k)
+function comb(n, k) { let r = 1; for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1); return Math.round(r); }
+
+/* ================= 排列轨迹(46) ================= */
+function buildPermuteTrace(nums, noUndo) {
+  const n = nums.length;
+  const used = new Array(n).fill(false);
+  const cur = [];
+  const results = [];
+  const frames = [];
+  let edgeStates = {}, leafDone = {};
+
+  const snap = (extra) => ({
+    cur: cur.slice(), used: used.slice(),
+    results: results.map(r => r.slice()),
+    node: cur.join(','), edges: { ...edgeStates }, leaves: { ...leafDone },
+    mode: 'permute', ...extra
+  });
+
+  frames.push(snap({ type: 'enter', line: 1, log: { cls: 'enter', text: `dfs(k=0) 进入 —— 决策从位置 0 开始` } }));
+
+  let dfsCount = 0, chooseCount = 0, undoCount = 0, pruneCount = 0;
+  function dfs(k) {
+    dfsCount++;
+    frames.push(snap({ type: 'enter', line: 1, k,
+      log: { cls: 'enter', text: `dfs(k=${k}) 进入 —— cur=[${cur.join(',') || '空'}]` } }));
+    if (k === n) {
+      results.push(cur.slice());
+      leafDone[cur.join(',')] = true;
+      frames.push(snap({ type: 'found', line: 3,
+        log: { cls: 'found', text: `k == n: 收获排列 [${cur.join(',')}] —— 存的是拷贝, 不是 cur 本身` } }));
+      return;
+    }
+    for (let i = 0; i < n; i++) {
+      if (used[i]) {
+        const child = [...cur, nums[i]].join(',');
+        edgeStates[cur.join(',') + '>' + child] = 'pruned';
+        pruneCount++;
+        frames.push(snap({ type: 'skip', line: 6, i,
+          log: { cls: 'skip', text: `i=${i}: nums[${i}]=${nums[i]} 已被占用 → 剪枝跳过` } }));
+        continue;
+      }
+      used[i] = true; cur.push(nums[i]);
+      const child = cur.join(',');
+      edgeStates[cur.slice(0, -1).join(',') + '>' + child] = 'done';
+      chooseCount++;
+      frames.push(snap({ type: 'choose', line: 7, i,
+        log: { cls: 'choose', text: `选择: used[${i}]=true, 递归传 append(path,${nums[i]})` } }));
+      dfs(k + 1);
+      if (!noUndo) {
+        cur.pop(); used[i] = false;
+        undoCount++;
+        frames.push(snap({ type: 'undo', line: 9, i,
+          log: { cls: 'undo', text: `撤销: cur.pop(), used[${i}]=false → cur=[${cur.join(',') || '空'}]` } }));
+      }
+    }
+    frames.push(snap({ type: 'exit', line: 5, k,
+      log: { cls: 'enter', text: `k=${k} 层 for 穷尽, 返回上层` } }));
+  }
+  dfs(0);
+  frames.push(snap({ type: 'finish', line: 5,
+    log: { cls: 'finish', text: noUndo
+      ? `结束: 只收获 ${results.length} 个 —— 撤销缺失, 后续候选全被剪枝(正确应有 ${factRange(n,n)} 个)`
+      : `结束: 共收获 ${results.length} 个排列 = ${n}! , 递归 ${dfsCount} 次, 选择/撤销各 ${chooseCount}/${undoCount} 次, 剪枝 ${pruneCount} 次` } }));
+  return frames;
+}
+
+/* ================= 组合轨迹(77) —— 优化版: 递增引擎, 零共享可变状态 ================= */
+function buildCombineTrace(n, k) {
+  const path = [];
+  const results = [];
+  const frames = [];
+  let edgeStates = {}, leafDone = {};
+
+  const snap = (extra) => ({
+    cur: path.slice(), start: curStart,
+    results: results.map(r => r.slice()),
+    node: path.join(','), edges: { ...edgeStates }, leaves: { ...leafDone },
+    mode: 'combine', ...extra
+  });
+
+  let curStart = 0;
+  let ghostCount = 0;
+
+  frames.push(snap({ type: 'enter', line: 1,
+    log: { cls: 'enter', text: `backtrack(start=0, nil) 进入 —— 哨兵 0 表示空集(假想的上一项)` } }));
+
+  function backtrack(start) {
+    curStart = start;
+    frames.push(snap({ type: 'enter', line: 1,
+      log: { cls: 'enter', text: `backtrack(start=${start}, path=[${path.join(',')}]) 进入` } }));
+    if (path.length === k) {
+      results.push(path.slice());
+      leafDone[path.join(',')] = true;
+      frames.push(snap({ type: 'found', line: 3,
+        log: { cls: 'found', text: `len(path) == ${k}: 收获组合 [${path.join(',')}] (升序代表)` } }));
+      return;
+    }
+    // 对比帧: 排列引擎会枚举所有未用候选; 降序的那些被循环边界剪掉
+    const ghosts = [];
+    for (let v = 1; v <= n; v++) {
+      if (v <= start && !path.includes(v)) ghosts.push(v);
+    }
+    if (ghosts.length > 0) {
+      ghostCount += ghosts.length;
+      frames.push(snap({ type: 'compare', line: 5, ghosts: ghosts.slice(),
+        log: { cls: 'skip', text: `排列视角: 候选 {${ghosts.join(',')}} ≤ start=${start} → 降序写法, 循环边界直接处死 ${ghosts.length} 条边(C=P/k! 的那把刀)` } }));
+    }
+    for (let i = start + 1; i <= n; i++) {
+      const childId = [...path, i].join(',');
+      edgeStates[path.join(',') + '>' + childId] = 'done';
+      frames.push(snap({ type: 'choose', line: 6, i,
+        log: { cls: 'choose', text: `选择 ${i}: backtrack(${i}, append(path,${i})) —— start 推进为 ${i}, path 传参不回退` } }));
+      path.push(i);
+      backtrack(i);
+      path.pop();
+    }
+    frames.push(snap({ type: 'exit', line: 5,
+      log: { cls: 'enter', text: `for 穷尽(start=${start}), 返回上层 —— 零撤销: 没有任何共享可变状态需要复原` } }));
+  }
+  backtrack(0);
+  frames.push(snap({ type: 'finish', line: 5,
+    log: { cls: 'finish', text: `结束: 收获 ${results.length} 个组合 = C(${n},${k}); 排列引擎同深度会走 P(${n},${k})=${factRange(n,k)} 条路` } }));
+  return frames;
+}
+
+/* ================= 子集轨迹(78) —— 优化版: 每节点收获, 零撤销 ================= */
+function buildSubsetsTrace(n) {
+  const path = [];
+  const results = [];
+  const frames = [];
+  let edgeStates = {}, harvested = {};
+  let ghostCount = 0;
+
+  const snap = (extra) => ({
+    cur: path.slice(), start: curStart,
+    results: results.map(r => r.slice()),
+    node: path.join(','), edges: { ...edgeStates }, leaves: { ...harvested },
+    mode: 'subsets', ...extra
+  });
+
+  let curStart = -1;
+  frames.push(snap({ type: 'enter', line: 1,
+    log: { cls: 'enter', text: `backtrack(start=-1, nil) 进入 —— 下标哨兵: 比最小下标 0 小一` } }));
+
+  function backtrack(start) {
+    curStart = start;
+    frames.push(snap({ type: 'enter', line: 1,
+      log: { cls: 'enter', text: `backtrack(start=${start}, path=[${path.join(',')}]) 进入` } }));
+    results.push(path.slice());
+    harvested[path.join(',')] = true;
+    frames.push(snap({ type: 'found', line: 2,
+      log: { cls: 'found', text: `收获子集 [${path.join(',') || '空'}] —— slices.Clone 拷贝存入, 每个节点都是答案` } }));
+    const ghosts = [];
+    for (let v = 0; v < n; v++) {
+      if (v <= start && !path.includes(v + 1)) ghosts.push(v + 1);
+    }
+    if (ghosts.length > 0) {
+      ghostCount += ghosts.length;
+      frames.push(snap({ type: 'compare', line: 3, ghosts: ghosts.slice(),
+        log: { cls: 'skip', text: `降序候选 {${ghosts.join(',')}} ≤ start=${start} → 循环边界处死 ${ghosts.length} 条边` } }));
+    }
+    for (let i = start + 1; i < n; i++) {
+      const childId = [...path, i + 1].join(',');
+      edgeStates[path.join(',') + '>' + childId] = 'done';
+      frames.push(snap({ type: 'choose', line: 4, i,
+        log: { cls: 'choose', text: `选择 nums[${i}]=${i + 1}: backtrack(${i}, append(path,${i + 1}))` } }));
+      path.push(i + 1);
+      backtrack(i);
+      path.pop();
+    }
+    frames.push(snap({ type: 'exit', line: 3,
+      log: { cls: 'enter', text: `for 穷尽(start=${start}), 返回上层 —— 零撤销` } }));
+  }
+  backtrack(-1);
+  frames.push(snap({ type: 'finish', line: 3,
+    log: { cls: 'finish', text: `结束: 收获 ${results.length} 个子集 = 2^${n}; 树走满全深度, 无终止剪枝(树叶 for 天然空转)` } }));
+  return frames;
+}
+
+/* ================= 树布局 ================= */
+function buildPermuteTree(n, nums) {
+  const nodes = []; const edges = [];
+  function gen(p, depth) {
+    const id = p.join(',');
+    nodes.push({ id, depth, label: p.length ? p.join('') : '根' });
+    if (depth === n) return;
+    for (let i = 0; i < n; i++) {
+      if (p.includes(nums[i])) continue;
+      const child = [...p, nums[i]];
+      edges.push({ from: id, to: child.join(','), label: String(nums[i]) });
+      gen(child, depth + 1);
+    }
+  }
+  gen([], 0);
+  return layoutTree(nodes, edges);
+}
+
+function buildCombineTree(n, k) {
+  const nodes = []; const edges = [];
+  function gen(p, depth) {
+    const id = p.join(',');
+    nodes.push({ id, depth, label: p.length ? p.join('') : '根' });
+    if (depth === k) return;
+    const last = p.length ? p[p.length - 1] : 0;
+    for (let i = last + 1; i <= n; i++) {
+      const child = [...p, i];
+      edges.push({ from: id, to: child.join(','), label: String(i) });
+      gen(child, depth + 1);
+    }
+  }
+  gen([], 0);
+  return layoutTree(nodes, edges);
+}
+
+function layoutTree(nodes, edges) {
+  const byDepth = {};
+  nodes.forEach(nd => { (byDepth[nd.depth] = byDepth[nd.depth] || []).push(nd); });
+  const H = Math.max(340, 26 * Math.max(...Object.values(byDepth).map(a => a.length)));
+  Object.values(byDepth).forEach(arr => {
+    arr.sort((a, b) => a.id.localeCompare(b.id));
+    arr.forEach((nd, i) => { nd.y = H * (i + 0.5) / arr.length; });
+  });
+  const maxD = Math.max(...nodes.map(nd => nd.depth));
+  nodes.forEach(nd => { nd.x = 40 + nd.depth * (560 / maxD); });
+  const pos = {}; nodes.forEach(nd => pos[nd.id] = nd);
+  return { nodes, edges, pos, width: 40 + maxD * (560 / maxD) + 80, height: H };
+}
+
+/* ================= SVG 渲染 ================= */
+const NS = 'http://www.w3.org/2000/svg';
+function renderTreeSVG(figureEl, tree, mode) {
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${tree.width} ${tree.height}`);
+  const edgeMap = {}, ghostMap = {};  // ghostMap: fromId -> [el...]
+  const isCombine = mode === 'combine';
+
+  tree.edges.forEach(e => {
+    const a = tree.pos[e.from], b = tree.pos[e.to];
+    const ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', a.x + 14); ln.setAttribute('y1', a.y);
+    ln.setAttribute('x2', b.x - 14); ln.setAttribute('y2', b.y);
+    svg.appendChild(ln);
+    const tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', (a.x + b.x) / 2); tx.setAttribute('y', (a.y + b.y) / 2 - 4);
+    tx.textContent = e.label;
+    svg.appendChild(tx);
+    edgeMap[e.from + '>' + e.to] = { line: ln, label: tx };
+  });
+
+  // 组合模式: 对比虚边(每个节点的降序候选) —— 从节点向左下画短虚线 + × + 值
+  if (isCombine) {
+    tree.nodes.forEach(nd => {
+      const maxDepth = mode === 'subsets' ? nVal() : +kSelVal();
+      if (nd.depth >= maxDepth) return; // 叶层不展开剪枝边
+      const inPath = nd.id === '' ? [] : nd.id.split(',').map(Number);
+      const last = inPath.length ? inPath[inPath.length - 1] : 0;
+      const ghosts = [];
+      for (let v = 1; v <= nVal(); v++) {
+        if (!inPath.includes(v) && v <= last) ghosts.push(v);
+      }
+      ghostMap[nd.id] = ghosts.map((v, gi) => {
+        const angle = Math.PI * (0.65 + 0.5 * (gi + 0.5) / Math.max(ghosts.length, 1)); // 左下扇形
+        const x2 = nd.x - 12 + Math.cos(angle) * 42, y2 = nd.y + Math.sin(angle) * 42;
+        const g = document.createElementNS(NS, 'g');
+        const ln = document.createElementNS(NS, 'line');
+        ln.setAttribute('x1', nd.x - 12); ln.setAttribute('y1', nd.y);
+        ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
+        ln.setAttribute('stroke', '#fca5a5'); ln.setAttribute('stroke-width', 1.5);
+        ln.setAttribute('stroke-dasharray', '4 3');
+        const t = document.createElementNS(NS, 'text');
+        t.setAttribute('x', x2 - 4); t.setAttribute('y', y2 + 10);
+        t.textContent = v + '×';
+        g.appendChild(ln); g.appendChild(t);
+        svg.appendChild(g);
+        return g;
+      });
+    });
+  }
+
+  const nodeMap = {};
+  tree.nodes.forEach(nd => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', 13);
+    svg.appendChild(c);
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', nd.x); t.setAttribute('y', nd.y + 3.5);
+    t.textContent = nd.label === '根' ? '' : nd.label.slice(-1);
+    svg.appendChild(t);
+    if (nd.depth === 0) {
+      const rt = document.createElementNS(NS, 'text');
+      rt.setAttribute('x', nd.x); rt.setAttribute('y', nd.y + 30);
+      rt.setAttribute('class', 'troot'); rt.textContent = mode === 'combine' ? 'root(start=0)' : 'root(空路径)';
+      svg.appendChild(rt);
+    }
+    nodeMap[nd.id] = { c, t };
+  });
+  figureEl.innerHTML = ''; figureEl.appendChild(svg);
+  return { svg, edgeMap, nodeMap, ghostMap };
+}
+
+/* ================= 伪代码两套 ================= */
+const CODE_PERMUTE = [
+  ['1',  'dfs(path):'],
+  ['2',  '    if len(path) == n:'],
+  ['3',  '        results ← slices.Clone(path)  <span class="cm">← 收获必须拷贝: path 底层数组共享</span>'],
+  ['4',  '        return                       <span class="cm">← 叶子处 used 全占用, 空转; 留着语义清晰</span>'],
+  ['5',  '    for i = 0..n-1:'],
+  ['6',  '        if used[i]: continue         <span class="cm">← 排列必须剪: 候选全域开放, 同一值可再入选</span>'],
+  ['7',  '        used[i] = true               <span class="cm">← 选择</span>'],
+  ['8',  '        dfs(append(path, nums[i]))   <span class="cm">← path 传参不回退</span>'],
+  ['9',  '        used[i] = false              <span class="cm">← 撤销: 全函数唯一的共享可变状态</span>'],
+];
+const CODE_COMBINE = [
+  ['1',  'backtrack(start, path):        <span class="cm">← start = 上一项; 入口哨兵 0 表示空集</span>'],
+  ['2',  '    if len(path) == k:'],
+  ['3',  '        results ← slices.Clone(path)'],
+  ['4',  '        return                     <span class="cm">← 剪枝! 递增封不死长度超限路径(k=1,n=20 差 4.7 万倍)</span>'],
+  ['5',  '    for i = start+1 .. n:         <span class="cm">← 准入即起点: 降序写法在循环边界处死(红虚边)</span>'],
+  ['6',  '        backtrack(i, append(path, i)) <span class="cm">← path 传参不回退; 零共享可变状态, 零撤销</span>'],
+];
+const CODE_SUBSETS = [
+  ['1',  'backtrack(start, path):           <span class="cm">← start = 上一项下标; 入口哨兵 -1</span>'],
+  ['2',  '    results ← slices.Clone(path)      <span class="cm">← 每个节点都收获(含根=空集); 必须拷贝</span>'],
+  ['3',  '    for i = start+1 .. n-1:           <span class="cm">← 递增剪枝即起点; 无终止剪枝: 树叶 for 天然空转</span>'],
+  ['4',  '        backtrack(i, append(path, nums[i])) <span class="cm">← 零共享可变状态, 零撤销</span>'],
+];
+
+/* ================= 播放器 ================= */
+let mode = 'permute';
+let traceMain = [], traceContra = null;
+let uiMain = null, uiContra = null, treeMain = null;
+let frameIdx = 0, playing = false, timer = null, logRendered = -1;
+
+const $ = id => document.getElementById(id);
+const nVal = () => +$('nSel').value;
+const kSelVal = () => $('kSel').value;
+const kVal = () => +$('kSel').value; // number 版(旧代码 kVal 误作 number 变量, 导致组合模式 TypeError)
+
+function resetAll() {
+  stopPlay();
+  const n = nVal();
+  if (mode === 'permute') {
+    const nums = Array.from({ length: n }, (_, i) => i + 1);
+    treeMain = buildPermuteTree(n, nums);
+    traceMain = buildPermuteTrace(nums, false);
+    traceContra = isContraOn() ? buildPermuteTrace(nums, true) : null;
+  } else if (mode === 'subsets') {
+    treeMain = buildCombineTree(n, n); // 子集树 = 递增下标全深度树(nums[i]=i+1)
+    traceMain = buildSubsetsTrace(n);
+    traceContra = null;
+  } else {
+    treeMain = buildCombineTree(n, kVal());
+    traceMain = buildCombineTrace(n, kVal());
+    traceContra = null; // 对照仅排列模式
+  }
+  uiMain = renderTreeSVG($('treeMain'), treeMain, mode);
+  if (traceContra) {
+    uiContra = renderTreeSVG($('treeContra'), treeMain, mode);
+  }
+  $('contraPanel').style.display = traceContra ? '' : 'none';
+  // 面板显隐
+  const combine = mode !== 'permute';
+  $('startBox').style.display = combine ? '' : 'none';
+  $('cmpBar').style.display = combine ? '' : 'none';
+  $('curTitle').textContent = mode === 'permute' ? 'cur（共享活路径）' : 'path（append 传参, 帧内只读）';
+  $('resTitle').textContent = mode === 'permute' ? 'results（收获的排列）' : mode === 'combine' ? `results（收获的组合, 共 C(n,k) 个）` : `results（收获的子集, 共 2^n 个）`;
+  $('treeTitle').textContent = mode === 'permute'
+    ? '决策树（根在左，向右生长；当前路径 = 根到高亮节点）'
+    : mode === 'combine'
+      ? `组合决策树（红虚边× = 排列引擎会走、组合引擎剪掉的降序候选）`
+      : `子集决策树（每个节点都是答案: 2^n 个; 红虚边× = 降序候选剪枝）`;
+  if (mode === 'combine') {
+    const N = nVal(), K = kVal();
+    $('cmpBar').innerHTML = `排列引擎同深度路径 <b>P(${N},${K}) = ${factRange(N, K)}</b> 条 → 组合引擎 <b>C(${N},${K}) = ${comb(N, K)}</b> 条：每个 ${K} 元集合的 ${factRange(K,K)} 种排列写法只保留升序代表。`;
+  } else if (mode === 'subsets') {
+    const N = nVal();
+    $('cmpBar').innerHTML = `子集树 = 递增引擎走满全深度：节点总数 <b>2^${N} = ${1 << N}</b>，每个节点收获一次（含根 = 空集）——无需终止剪枝，树叶的 for 天然空转。`;
+  }
+  const startDesc = document.querySelector('#startBox .desc');
+  if (startDesc) startDesc.innerHTML = mode === 'subsets'
+    ? 'start = -1 表示空集（下标哨兵，比最小下标 0 小一）；非 -1 = path 末元素的下标。<br>准入：<b>i &gt; start</b>。'
+    : 'start = 0 表示空集（假想的上一项）；非 0 = path 的末元素。<br>准入条件：<b>i &gt; start</b> —— 只准递增。';
+  renderCode();
+  $('log').innerHTML = ''; logRendered = -1;
+  frameIdx = 0;
+  renderFrame();
+}
+
+function isContraOn() { return $('btnUndo').textContent.includes('开'); }
+
+function applyTreeState(ui, tree, f) {
+  const pathSet = new Set();
+  const curPath = ['', ...f.cur.map((_, i) => f.cur.slice(0, i + 1).join(','))];
+  curPath.forEach(p => pathSet.add(p));
+  Object.entries(ui.edgeMap).forEach(([eid, els]) => {
+    const st = f.edges[eid];
+    const onPath = pathSet.has(eid.split('>')[0]) && pathSet.has(eid.split('>')[1]);
+    els.line.setAttribute('stroke', onPath ? '#2563eb' : st === 'pruned' ? '#fca5a5' : '#cbd5e1');
+    els.line.setAttribute('stroke-width', onPath ? 3 : 1.5);
+    if (st === 'pruned' && !onPath) els.line.setAttribute('stroke-dasharray', '4 3');
+    else els.line.removeAttribute('stroke-dasharray');
+    els.label.setAttribute('fill', onPath ? '#1d4ed8' : st === 'pruned' ? '#dc2626' : '#94a3b8');
+    els.label.setAttribute('font-weight', onPath ? '700' : '400');
+  });
+  // 对比虚边闪烁: compare 帧时高亮当前节点的虚边
+  if (ui.ghostMap) {
+    Object.entries(ui.ghostMap).forEach(([nid, els]) => {
+      const hot = f.type === 'compare' && f.node === nid;
+      els.forEach(g => {
+        g.querySelectorAll('line').forEach(ln => {
+          ln.setAttribute('stroke', hot ? '#dc2626' : '#fca5a5');
+          ln.setAttribute('stroke-width', hot ? 3 : 1.5);
+        });
+        g.querySelectorAll('text').forEach(tx => {
+          tx.setAttribute('fill', hot ? '#dc2626' : '#fca5a5');
+          tx.setAttribute('font-weight', hot ? '700' : '400');
+        });
+      });
+    });
+  }
+  Object.entries(ui.nodeMap).forEach(([nid, els]) => {
+    const onPath = pathSet.has(nid);
+    const isCur = f.node === nid;
+    const isLeafDone = f.leaves[nid];
+    els.c.setAttribute('fill', isCur ? '#2563eb' : isLeafDone ? '#a7f3d0' : onPath ? '#bfdbfe' : '#f1f5f9');
+    els.c.setAttribute('stroke', isCur ? '#1e40af' : isLeafDone ? '#059669' : '#cbd5e1');
+    els.c.setAttribute('stroke-width', isCur ? 3 : 1.5);
+    els.c.setAttribute('r', isCur ? 15 : 13);
+    els.t.setAttribute('fill', isCur ? '#fff' : '#334155');
+    els.t.setAttribute('font-weight', isCur ? '700' : '500');
+  });
+}
+
+function renderFrame() {
+  const idx = Math.min(frameIdx, traceMain.length - 1);
+  const f = traceMain[idx];
+  applyTreeState(uiMain, treeMain, f);
+  if (traceContra && uiContra) {
+    const ci = Math.min(frameIdx, traceContra.length - 1);
+    applyTreeState(uiContra, treeMain, traceContra[ci]);
+    const lastC = traceContra[traceContra.length - 1];
+    $('contraResult').textContent = `只收获 ${lastC.results.length} 个 (应 ${factRange(nVal(), nVal())})`;
+  }
+  // path/cur 面板
+  const curRow = $('curRow');
+  curRow.innerHTML = '';
+  const maxLen = mode === 'permute' ? nVal() : mode === 'combine' ? kVal() : nVal();
+  if (f.cur.length === 0) curRow.innerHTML = '<span class="curEmpty">空</span>';
+  f.cur.forEach(v => {
+    const d = document.createElement('div'); d.className = 'curCell'; d.textContent = v; curRow.appendChild(d);
+  });
+  for (let i = f.cur.length; i < maxLen; i++) {
+    const d = document.createElement('div'); d.className = 'curCell idx'; d.textContent = '待填'; curRow.appendChild(d);
+  }
+  // start 面板(组合)
+  if (mode === 'combine' && f.start !== undefined) $('startVal').textContent = f.start;
+  // used 面板: 仅排列模式有 used(组合/子集优化后零共享可变状态)
+  const usedRow = $('usedRow');
+  $('usedBox').style.display = mode === 'permute' ? '' : 'none';
+  usedRow.innerHTML = '';
+  if (mode === 'permute') {
+    f.used.forEach((on, i) => {
+      const d = document.createElement('div');
+      d.className = 'usedCell' + (on ? ' on' : '');
+      d.innerHTML = `<span>nums[${i}]=${i + 1}</span><span class="tag">${on ? '占用' : '空闲'}</span>`;
+      usedRow.appendChild(d);
+    });
+  }
+  // results 面板
+  const rr = $('resultRow');
+  rr.innerHTML = '';
+  f.results.forEach(r => {
+    const d = document.createElement('span'); d.className = 'resultChip'; d.textContent = '[' + r.join(',') + ']'; rr.appendChild(d);
+  });
+  const total = mode === 'permute' ? factRange(nVal(), nVal()) : mode === 'combine' ? comb(nVal(), kVal()) : (1 << nVal());
+  const cnt = document.createElement('span'); cnt.className = 'resultCount';
+  cnt.textContent = `${f.results.length} / ${total}`;
+  rr.appendChild(cnt);
+  // 代码高亮
+  document.querySelectorAll('#code .ln').forEach((ln, i) => {
+    ln.classList.remove('hl', 'ch', 'un', 'pr');
+    if (f.line === i + 1) {
+      ln.classList.add(f.type === 'choose' ? 'ch' : f.type === 'undo' ? 'un' : (f.type === 'skip' || f.type === 'compare') ? 'pr' : 'hl');
+    }
+  });
+  // 日志
+  if (frameIdx < logRendered) { $('log').innerHTML = ''; logRendered = -1; }
+  for (let i = logRendered + 1; i <= idx; i++) {
+    const d = document.createElement('div');
+    d.className = traceMain[i].log.cls; d.textContent = traceMain[i].log.text;
+    $('log').appendChild(d);
+  }
+  logRendered = idx;
+  $('log').scrollTop = $('log').scrollHeight;
+}
+
+/* ---- 播放控制 ---- */
+function speedMs() { return 1150 - $('speed').value * 105; }
+function startPlay() {
+  if (frameIdx >= traceMain.length - 1) frameIdx = 0;
+  playing = true; $('btnPlay').textContent = '暂停';
+  timer = setInterval(() => {
+    if (frameIdx >= traceMain.length - 1) { stopPlay(); return; }
+    frameIdx++; renderFrame();
+  }, speedMs());
+}
+function stopPlay() {
+  playing = false; $('btnPlay').textContent = '播放';
+  if (timer) { clearInterval(timer); timer = null; }
+}
+$('btnPlay').onclick = () => playing ? stopPlay() : startPlay();
+$('btnStep').onclick = () => { stopPlay(); if (frameIdx < traceMain.length - 1) { frameIdx++; renderFrame(); } };
+$('btnReset').onclick = resetAll;
+$('speed').oninput = () => { if (playing) { stopPlay(); startPlay(); } };
+$('modeSel').onchange = () => {
+  mode = $('modeSel').value;
+  $('kWrap').style.display = mode === 'combine' ? '' : 'none';
+  const nSel = $('nSel');
+  if (mode === 'combine') {
+    nSel.innerHTML = '<option>2</option><option>3</option><option selected>4</option><option>5</option>';
+  } else if (mode === 'subsets') {
+    nSel.innerHTML = '<option>1</option><option>2</option><option selected>3</option><option>4</option>'; // 2^n 节点, n=4 已 31 节点
+  } else {
+    nSel.innerHTML = '<option>2</option><option selected>3</option><option>4</option><option>5</option>';
+  }
+  resetAll();
+};
+$('nSel').onchange = resetAll;
+$('kSel').onchange = resetAll;
+$('btnUndo').onclick = () => {
+  const on = !isContraOn();
+  $('btnUndo').textContent = on ? '忘撤销对照: 开' : '忘撤销对照: 关';
+  if (mode !== 'permute') return;
+  resetAll();
+};
+
+/* ---- 伪代码渲染 + tabs ---- */
+function renderCode() {
+  const el = $('code'); el.innerHTML = '';
+  const CODE = mode === 'permute' ? CODE_PERMUTE : mode === 'combine' ? CODE_COMBINE : CODE_SUBSETS;
+  CODE.forEach(([no, text]) => {
+    const d = document.createElement('div'); d.className = 'ln';
+    d.innerHTML = `<span class="no">${no}</span><span>${text}</span>`;
+    el.appendChild(d);
+  });
+}
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tabbody > div').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); $(b.dataset.tab).classList.add('active');
+  };
+});
+
+/* ---- SVG 标签样式 ---- */
+const style = document.createElement('style');
+style.textContent = `
+  #treeMain line, #treeContra line { stroke: #cbd5e1; stroke-width: 1.5; }
+  #treeMain circle, #treeContra circle { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 1.5; }
+  #treeMain text, #treeContra text { font-size: 11px; text-anchor: middle; font-family: Menlo, monospace; fill: #334155; }
+  .troot { font-size: 10px; fill: #64748b; }
+  #treeMain line + text { font-size: 10px; fill: #94a3b8; }
+`;
+document.head.appendChild(style);
+
+/* ---- t7: 免撤销的裁环证明动画 ---- */
+(function initProofDemo() {
+  const NS6 = 'http://www.w3.org/2000/svg';
+  const mk6 = (tag, attrs, text) => {
+    const el = document.createElementNS(NS6, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    if (text !== undefined) el.textContent = text;
+    return el;
+  };
+  const pos = { s: [70, 120], a: [210, 120], v: [350, 55], d: [350, 185], end: [210, 235] };
+  // 帧序列: {type, focus, stack, dead:[], log, key}
+  const frames = [
+    { type: 'init', stack: [], dead: [],
+      log: '图: s→a→{v,end}; v→{d,a(回边)}; d 无出边。开始 DFS 判定 s→end。' },
+    { type: 'enter', focus: 's', stack: ['s'], dead: [],
+      log: '进入 s, 永久标记(蓝) —— 判定版没有撤销, 蓝了就不退。' },
+    { type: 'enter', focus: 'a', stack: ['s','a'], dead: [],
+      log: '进入 a(标记)。a 的邻居表: [v, end] —— 先探索 v。' },
+    { type: 'enter', focus: 'v', stack: ['s','a','v'], dead: [],
+      log: '进入 v(标记)。v 的邻居表: [d, a]。' },
+    { type: 'enter', focus: 'd', stack: ['s','a','v','d'], dead: [],
+      log: 'd 未标记 → 递归进入(标记)。' },
+    { type: 'dead', focus: 'd', stack: ['s','a','v'], dead: ['d'],
+      log: 'd 无出边 → <b>宣判死(墓碑)</b>。归纳基础: 不存在经 d 的成功路径 —— 这是 d 的固有属性。', key: false },
+    { type: 'skipAnc', focus: 'v', stack: ['s','a','v'], dead: ['d'],
+      log: '<b>v 想走邻居 a —— a 已标记且在栈上(祖先)!</b> 跳过。走它会重访 a → 形成环。这一步是整个证明的核心伏笔。', key: true },
+    { type: 'dead', focus: 'v', stack: ['s','a'], dead: ['d','v'],
+      log: '<b>v 宣判死(墓碑)。它被冤枉了吗?</b> 表面上「v→a→end」是一条活路…', key: true },
+    { type: 'cut', focus: 'v', stack: ['s','a'], dead: ['d','v'],
+      log: '<b>裁环论证</b>: 假想的「经 v 成功路径」 s→a→v→a→end 带环(a 重复, 金色虚线)。裁掉环段 v→a: 剩 <b>s→a→end</b>(绿色粗线) —— 这条成功路径<b>不经过 v</b>! 那种成功不需要 v, v 错过它无妨。三方向(死邻居/祖先/白邻居)都堵死 → <b>不存在需要 v 的简单成功路径 → v 死得清白</b>。', key: true },
+    { type: 'enter', focus: 'end', stack: ['s','a','end'], dead: ['d','v'],
+      log: '回到 a, 探索下一个邻居 end → 进入(标记)。' },
+    { type: 'win', focus: 'end', stack: ['s','a','end'], dead: ['d','v'],
+      log: '<b>到达 end, 判定成功。</b> v 和 d 的墓碑从未被触碰 —— 但正确性无损: 存在成功路径 ⟺ found。每个节点唯一一次探索, 足以代表全人类。' },
+  ];
+  let fi = 0;
+  function render() {
+    const f = frames[fi];
+    const fig = $('proofGraph');
+    fig.innerHTML = '';
+    const svg = mk6('svg', { viewBox: '0 0 440 285', width: '100%', 'max-width': '440px' });
+    fig.appendChild(svg);
+    const onStack = new Set(f.stack);
+    const dead = new Set(f.dead);
+    // 边
+    const edges = [
+      ['s','a', false], ['a','v', false], ['v','d', false], ['a','end', false],
+    ];
+    edges.forEach(([x, y]) => {
+      const p1 = pos[x], p2 = pos[y];
+      const hot = (f.type === 'win' && y === 'end' && onStack.has(x)) ||
+                  (f.type === 'cut' && ((x === 's' && y === 'a') || (x === 'a' && y === 'end')));
+      svg.appendChild(mk6('line', { x1: p1[0]+16, y1: p1[1], x2: p2[0]-16, y2: p2[1],
+        stroke: hot ? '#16a34a' : '#94a3b8', 'stroke-width': hot ? 4 : 1.5 }));
+    });
+    // 回边 v→a(弧)
+    const cutHot = f.type === 'cut' || f.type === 'skipAnc';
+    svg.appendChild(mk6('path', {
+      d: `M ${pos.v[0]-14} ${pos.v[1]+12} Q ${pos.a[0]+60} ${pos.a[1]-70} ${pos.a[0]+18} ${pos.a[1]-14}`,
+      fill: 'none', stroke: f.type === 'cut' ? '#d97706' : cutHot ? '#dc2626' : '#cbd5e1',
+      'stroke-width': f.type === 'cut' ? 3 : 2,
+      'stroke-dasharray': '6 4' }));
+    if (f.type === 'cut') {
+      // 假想带环路径: s→a→v→a→end 的金色虚影(s→a, a→v 段)
+      svg.appendChild(mk6('line', { x1: pos.s[0]+16, y1: pos.s[1], x2: pos.a[0]-16, y2: pos.a[1],
+        stroke: '#d97706', 'stroke-width': 2.5, 'stroke-dasharray': '5 4' }));
+      svg.appendChild(mk6('line', { x1: pos.a[0]+16, y1: pos.a[1], x2: pos.v[0]-16, y2: pos.v[1],
+        stroke: '#d97706', 'stroke-width': 2.5, 'stroke-dasharray': '5 4' }));
+      svg.appendChild(mk6('text', { x: (pos.s[0]+pos.a[0])/2, y: pos.a[1]-12, 'text-anchor': 'middle',
+        fill: '#d97706', 'font-size': 10, 'font-weight': 700 }, '假想路径(带环)'));
+      svg.appendChild(mk6('text', { x: 220, y: 275, 'text-anchor': 'middle',
+        fill: '#16a34a', 'font-size': 11, 'font-weight': 700 }, '裁环后: s→a→end (不需要 v!)'));
+    }
+    // 节点
+    Object.entries(pos).forEach(([w, p]) => {
+      const isS = w === 's', isEnd = w === 'end', isD = dead.has(w), isStack = onStack.has(w);
+      svg.appendChild(mk6('rect', { x: p[0]-24, y: p[1]-18, width: 48, height: 36, rx: 9,
+        fill: f.type === 'win' && isEnd ? '#a7f3d0' : isStack ? '#2563eb' : isD ? '#fee2e2' : '#f8fafc',
+        stroke: isD ? '#dc2626' : isStack ? '#1e40af' : '#cbd5e1',
+        'stroke-width': 2, 'stroke-dasharray': isD ? '4 3' : 'none' }));
+      svg.appendChild(mk6('text', { x: p[0], y: p[1]+5, 'text-anchor': 'middle',
+        fill: isStack ? '#fff' : isD ? '#991b1b' : '#334155', 'font-size': 13, 'font-weight': 800, 'font-family': 'Menlo' }, w));
+      if (isD) svg.appendChild(mk6('text', { x: p[0], y: p[1]-24, 'text-anchor': 'middle',
+        fill: '#dc2626', 'font-size': 10, 'font-weight': 700 }, '墓碑'));
+      if (f.focus === w && f.type === 'skipAnc') svg.appendChild(mk6('text', { x: p[0], y: p[1]+32, 'text-anchor': 'middle',
+        fill: '#dc2626', 'font-size': 10, 'font-weight': 700 }, '想走 a: 已在栈上!'));
+    });
+    $('proofStack').textContent = '当前栈: ' + (f.stack.length ? f.stack.join('→') : '空') +
+      '   墓碑: [' + (f.dead.length ? f.dead.join(',') : '无') + ']';
+    $('proofLog').innerHTML = (f.key ? '<b style="color:#ea580c">[关键帧]</b> ' : '') + f.log +
+      ` <span style="color:#94a3b8">[${fi+1}/${frames.length}]</span>`;
+  }
+  $('pfNext').onclick = () => { if (fi < frames.length - 1) { fi++; render(); } };
+  $('pfPrev').onclick = () => { if (fi > 0) { fi--; render(); } };
+  $('pfReset').onclick = () => { fi = 0; render(); };
+  render();
+
+  // 右侧: 79 无裁环桥静态展示
+  const nb = $('noBridge');
+  const svg2 = mk6('svg', { viewBox: '0 0 420 150', width: '100%', 'max-width': '420px' });
+  nb.appendChild(svg2);
+  const cells = [
+    ['(0,0)A', 30, 30, '#16a34a'], ['(1,0)B', 30, 90, '#16a34a'],
+    ['(1,1)A', 170, 90, '#dc2626'], ['(0,1)B', 170, 30, '#16a34a'], ['(0,2)A', 310, 30, '#16a34a'],
+  ];
+  const seq = [[0,1],[1,2],[2,3],[3,4]];
+  seq.forEach(([i, j]) => {
+    const a = cells[i], b = cells[j];
+    const isCut = (i === 1 && j === 2) || (i === 2 && j === 3);
+    svg2.appendChild(mk6('line', { x1: a[1]+30, y1: a[2], x2: b[1]-30, y2: b[2],
+      stroke: isCut ? '#dc2626' : '#16a34a', 'stroke-width': 3, 'stroke-dasharray': isCut ? '5 4' : 'none' }));
+  });
+  cells.forEach(([label, x, y, color], i) => {
+    svg2.appendChild(mk6('rect', { x: x-30, y: y-20, width: 60, height: 40, rx: 9,
+      fill: color === '#dc2626' ? '#fee2e2' : '#f0fdf4', stroke: color, 'stroke-width': 2.5,
+      'stroke-dasharray': color === '#dc2626' ? '4 3' : 'none' }));
+    svg2.appendChild(mk6('text', { x, y: y+5, 'text-anchor': 'middle', fill: '#1e293b',
+      'font-size': 12, 'font-weight': 700, 'font-family': 'Menlo' }, label));
+    if (color === '#dc2626') svg2.appendChild(mk6('text', { x, y: y+38, 'text-anchor': 'middle',
+      fill: '#dc2626', 'font-size': 10, 'font-weight': 700 }, '裁掉它?'));
+  });
+  svg2.appendChild(mk6('text', { x: 210, y: 145, 'text-anchor': 'middle', fill: '#475569',
+    'font-size': 11, 'font-family': 'Menlo' }, 'S = A B A B A;  裁掉 (1,1) 后: A B B A (断链+错位)'));
+})();
+
+/* ---- t6 右上: 79 解空间图(格子为节点, 多路径多色同显) ---- */
+(function initExistGraph() {
+  const NS5 = 'http://www.w3.org/2000/svg';
+  const mk5 = (tag, attrs, text) => {
+    const el = document.createElementNS(NS5, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    if (text !== undefined) el.textContent = text;
+    return el;
+  };
+  const bd = [['A','B','A'],['B','A','A']];
+  const word = 'ABABA';
+  const pos = {
+    '0,0': [95, 80], '0,1': [225, 80], '0,2': [355, 80],
+    '1,0': [95, 200], '1,1': [225, 200], '1,2': [355, 200],
+  };
+  const adjEdges = [
+    ['0,0','0,1'], ['0,1','0,2'], ['1,0','1,1'], ['1,1','1,2'],
+    ['0,0','1,0'], ['0,1','1,1'], ['0,2','1,2'],
+  ];
+  const paths = [
+    ['0,0-0,1-0,2', '#dc2626', 'F1 死支①: 走到 (0,2) 后无 B 可去'],
+    ['0,0-0,1-1,1-1,0', '#2563eb', 'F2 死支②: 经 (1,1) 进 (1,0) 后无 A 可去'],
+    ['0,0-1,0-1,1-0,1-0,2', '#16a34a', 'S 成功: ABABA ✓'],
+  ];
+  const fig = $('existGraph');
+  fig.innerHTML = '';
+  const svg = mk5('svg', { viewBox: '0 0 450 285', width: '100%', 'max-width': '450px' });
+  fig.appendChild(svg);
+  // word 标题
+  svg.appendChild(mk5('text', { x: 225, y: 22, 'text-anchor': 'middle', fill: '#475569',
+    'font-size': 13, 'font-weight': 700, 'font-family': 'Menlo' }, 'word = ' + word + '  (board: ' + bd.map(r => r.join('')).join(' / ') + ')'));
+  const seqOf = p => p[0].split('-');
+  const onEdge = (a, b, p) => {
+    const s = seqOf(p);
+    for (let i = 0; i + 1 < s.length; i++) {
+      if (s[i] === a && s[i + 1] === b) return 'fwd';
+      if (s[i] === b && s[i + 1] === a) return 'rev';
+    }
+    return null;
+  };
+  // 灰底边
+  adjEdges.forEach(([a, b]) => {
+    if (paths.some(p => onEdge(a, b, p))) return;
+    const p1 = pos[a], p2 = pos[b];
+    svg.appendChild(mk5('line', { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1], stroke: '#e2e8f0', 'stroke-width': 1.5 }));
+  });
+  // 路径边: 平行线 + 方向箭头
+  adjEdges.forEach(([a, b]) => {
+    const owners = paths.map(p => ({ p, dir: onEdge(a, b, p) })).filter(o => o.dir);
+    if (!owners.length) return;
+    const p1 = pos[a], p2 = pos[b];
+    const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+    const len = Math.hypot(dx, dy);
+    const nx = -dy / len, ny = dx / len;
+    const ux = dx / len, uy = dy / len;
+    const t0 = 0.22, t1 = 0.78;
+    owners.forEach((o, i) => {
+      const off = (i - (owners.length - 1) / 2) * 8;
+      const sx = p1[0] + dx * t0 + nx * off, sy = p1[1] + dy * t0 + ny * off;
+      const ex = p1[0] + dx * t1 + nx * off, ey = p1[1] + dy * t1 + ny * off;
+      svg.appendChild(mk5('line', { x1: sx, y1: sy, x2: ex, y2: ey, stroke: o.p[1], 'stroke-width': 3 }));
+      // 方向箭头(中点小三角, 依路径走向)
+      const mx = (sx + ex) / 2, my = (sy + ey) / 2;
+      const dux = o.dir === 'fwd' ? ux : -ux, duy = o.dir === 'fwd' ? uy : -uy;
+      svg.appendChild(mk5('path', {
+        d: `M ${mx + dux * 8} ${my + duy * 8} L ${mx - dux * 4 - duy * 4} ${my - duy * 4 + dux * 4} L ${mx - dux * 4 + duy * 4} ${my - duy * 4 - dux * 4} z`,
+        fill: o.p[1] }));
+    });
+  });
+  // 节点 + 多重身份序号
+  Object.entries(pos).forEach(([k, p]) => {
+    const [r, c] = k.split(',').map(Number);
+    svg.appendChild(mk5('rect', { x: p[0] - 32, y: p[1] - 20, width: 64, height: 40, rx: 10,
+      fill: '#f8fafc', stroke: '#475569', 'stroke-width': 2 }));
+    svg.appendChild(mk5('text', { x: p[0], y: p[1] + 7, 'text-anchor': 'middle',
+      fill: '#1e293b', 'font-size': 18, 'font-weight': 800, 'font-family': 'Menlo' }, bd[r][c]));
+    svg.appendChild(mk5('text', { x: p[0] + 24, y: p[1] + 17, 'text-anchor': 'end',
+      fill: '#94a3b8', 'font-size': 9, 'font-family': 'Menlo' }, '(' + r + ',' + c + ')'));
+    // 各路径身份序号(顶部堆叠)
+    let idx = 0;
+    paths.forEach(([pth, color]) => {
+      const s = seqOf([pth]);
+      const i = s.indexOf(k);
+      if (i >= 0) {
+        svg.appendChild(mk5('text', { x: p[0] - 26 + idx * 26, y: p[1] - 27,
+          fill: color, 'font-size': 11, 'font-weight': 800, 'font-family': 'Menlo' }, '#' + (i + 1)));
+        idx++;
+      }
+    });
+  });
+  // 图例
+  const lg = $('existGraphLegend');
+  lg.innerHTML = '';
+  paths.forEach(([pth, color, name]) => {
+    const d = document.createElement('div');
+    d.innerHTML = `<span style="display:inline-block;width:26px;height:4px;background:${color};vertical-align:middle;margin-right:6px;border-radius:2px"></span>${name}: <span style="font-family:Menlo;font-size:11px">${pth.split('-').map(x => '(' + x + ')').join('→')}</span>`;
+    lg.appendChild(d);
+  });
+  $('existGraphNote').innerHTML = '看 <b>(1,1)</b> 和 <b>(1,0)</b>: 各带两个彩色序号 —— F2 里它们是死路终点, S 里它们是活路中途。<b>同一格子、不同路径上下文，死活不同</b> → 失败不能立永久墓碑，必须撤销归还。对照左图: 每个词只有一个身份, 死即全图死。';
+})();
+
+/* ---- t6 右: 79 判定版 board 步进动画(撤销版/不撤销版) ---- */
+(function initExistDemo() {
+  const NS4 = 'http://www.w3.org/2000/svg';
+  const mk4 = (tag, attrs, text) => {
+    const el = document.createElementNS(NS4, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    if (text !== undefined) el.textContent = text;
+    return el;
+  };
+  const board = [['A','B','A'],['B','A','A']];
+  const word = 'ABABA';
+  // 帧生成器: undo=true 正确版, false 漏解版
+  function buildFrames(withUndo) {
+    const f = [];
+    const push = (type, cell, stack, log, key) => f.push({ type, cell, stack: stack.map(s => s.slice()), log, key: !!key });
+    // 手工推演的完整 DFS 过程(dirs 上右下左)
+    push('enter', [0,0], [[0,0]], '起点 (0,0)=A 匹配 w0 ✓ 占用');
+    push('enter', [0,1], [[0,0],[0,1]], '右邻 (0,1)=B 匹配 w1 ✓ 占用 —— [死支 F 开始]');
+    push('enter', [0,2], [[0,0],[0,1],[0,2]], '右邻 (0,2)=A 匹配 w2 ✓ 占用');
+    push('fail', [0,2], [[0,0],[0,1],[0,2]], '下邻 (1,2)=A ≠ w3(B), 左邻已占 → (0,2) 死');
+    if (withUndo) push('undo', [0,2], [[0,0],[0,1]], '撤销: 释放 (0,2) —— 归还给后续候选路径');
+    push('enter', [1,1], [[0,0],[0,1],[1,1]], '下邻 (1,1)=A 匹配 w2 ✓ 占用');
+    push('enter', [1,0], [[0,0],[0,1],[1,1],[1,0]], '左邻 (1,0)=B 匹配 w3 ✓ 占用');
+    push('fail', [1,0], [[0,0],[0,1],[1,1],[1,0]], '邻居 (0,0)/(1,1) 均已占 → (1,0) 死');
+    if (withUndo) push('undo', [1,0], [[0,0],[0,1],[1,1]], '撤销: 释放 (1,0)');
+    push('fail', [1,1], [[0,0],[0,1],[1,1]], '其余邻居 (1,2)=A ≠ w3 → (1,1) 死');
+    if (withUndo) push('undo', [1,1], [[0,0],[0,1]], '撤销: 释放 (1,1) —— 关键! 若不释放, 成功支将被此处挡死');
+    push('fail', [0,1], [[0,0],[0,1]], '邻居尽 → (0,1) 死, 死支 F 全灭');
+    if (withUndo) push('undo', [0,1], [[0,0]], '撤销: 释放 (0,1), 回到起点');
+    if (withUndo) {
+      push('enter', [1,0], [[0,0],[1,0]], '起点改试下邻 (1,0)=B 匹配 w1 ✓ —— [成功支 S 开始]');
+      push('enter', [1,1], [[0,0],[1,0],[1,1]], '(1,1) 第二次进入! 上一世它死了, 释放后重生 —— 同格不同占用集, 死活不同');
+      push('enter', [0,1], [[0,0],[1,0],[1,1],[0,1]], '(0,1) 也第二次进入!');
+      push('enter', [0,2], [[0,0],[1,0],[1,1],[0,1],[0,2]], '右邻 (0,2)=A 匹配 w4, 词完成 → 成功!路径 S=(0,0)(1,0)(1,1)(0,1)(0,2) = ABABA');
+      push('win', [0,2], [[0,0],[1,0],[1,1],[0,1],[0,2]], '返回 true。同一批格子被 F 和 S 两支先后使用 —— 靠的就是撤销归还');
+    } else {
+      push('block', [1,0], [[0,0]], '改试下邻 (1,0): 已被死支 F 永久占用 → 挡死!');
+      push('fail', [0,0], [[0,0]], '全部候选尽 → 返回 false。成功支 S 明明存在却被漏掉 —— 这就是不撤销的代价');
+    }
+    return f;
+  }
+  let frames = buildFrames(true), fi = 0;
+  function render() {
+    const f = frames[fi];
+    const fig = $('existBoard');
+    fig.innerHTML = '';
+    const svg = mk4('svg', { viewBox: '0 0 330 160', width: '100%', 'max-width': '330px' });
+    fig.appendChild(svg);
+    const stackSet = new Map(); // cell -> 栈序
+    f.stack.forEach(([r, c], i) => stackSet.set(r + ',' + c, i));
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+      const x = 10 + c * 105, y = 10 + r * 70;
+      const key = r + ',' + c;
+      const onStack = stackSet.has(key);
+      const isFocus = f.cell && f.cell[0] === r && f.cell[1] === c;
+      let fill = '#f8fafc', stroke = '#cbd5e1', dash = 'none';
+      if (onStack) { fill = '#2563eb'; stroke = '#1e40af'; }
+      if (isFocus && f.type === 'fail') { fill = '#fee2e2'; stroke = '#dc2626'; dash = '4 3'; }
+      if (isFocus && f.type === 'undo') { fill = '#fff7ed'; stroke = '#ea580c'; dash = '4 3'; }
+      if (isFocus && f.type === 'block') { fill = '#fee2e2'; stroke = '#dc2626'; dash = '4 3'; }
+      if (f.type === 'win' && isFocus) { fill = '#a7f3d0'; stroke = '#059669'; }
+      svg.appendChild(mk4('rect', { x, y, width: 90, height: 56, rx: 10, fill, stroke, 'stroke-width': isFocus ? 3 : 1.5, 'stroke-dasharray': dash }));
+      svg.appendChild(mk4('text', { x: x + 45, y: y + 34, 'text-anchor': 'middle', fill: onStack ? '#fff' : '#334155', 'font-size': 20, 'font-weight': 800, 'font-family': 'Menlo' }, board[r][c]));
+      svg.appendChild(mk4('text', { x: x + 45, y: y + 50, 'text-anchor': 'middle', fill: onStack ? '#dbeafe' : '#94a3b8', 'font-size': 9, 'font-family': 'Menlo' }, '(' + r + ',' + c + ')'));
+      if (onStack) svg.appendChild(mk4('text', { x: x + 8, y: y + 16, fill: '#fde68a', 'font-size': 11, 'font-weight': 800 }, '#' + (stackSet.get(key) + 1)));
+      if (isFocus && f.type === 'undo') svg.appendChild(mk4('text', { x: x + 45, y: y - 4, 'text-anchor': 'middle', fill: '#ea580c', 'font-size': 10, 'font-weight': 700 }, '已释放'));
+      if (isFocus && f.type === 'fail') svg.appendChild(mk4('text', { x: x + 45, y: y - 4, 'text-anchor': 'middle', fill: '#dc2626', 'font-size': 10, 'font-weight': 700 }, '死'));
+      if (isFocus && f.type === 'block') svg.appendChild(mk4('text', { x: x + 45, y: y - 4, 'text-anchor': 'middle', fill: '#dc2626', 'font-size': 10, 'font-weight': 700 }, '被挡!'));
+      if (isFocus && f.type === 'win') svg.appendChild(mk4('text', { x: x + 45, y: y - 4, 'text-anchor': 'middle', fill: '#059669', 'font-size': 10, 'font-weight': 700 }, '成功'));
+    }
+    // word 匹配条
+    const wb = $('existWordBar');
+    wb.innerHTML = '';
+    const matched = f.type === 'enter' || f.type === 'win' ? f.stack.length : Math.max(0, f.stack.length);
+    for (let i = 0; i < word.length; i++) {
+      const s = document.createElement('span');
+      s.textContent = word[i];
+      s.style.cssText = `display:inline-block;width:26px;height:26px;margin-right:4px;text-align:center;line-height:26px;border-radius:6px;font-family:Menlo;font-weight:700;font-size:14px;` +
+        (i < matched ? 'background:#2563eb;color:#fff;' : 'background:#f1f5f9;color:#94a3b8;');
+      wb.appendChild(s);
+    }
+    $('existStack').textContent = '当前栈: ' + (f.stack.length ? f.stack.map(([r, c]) => `(${r},${c})`).join('→') : '空');
+    $('existLog').innerHTML = (f.key ? '<b style="color:#ea580c">[关键帧]</b> ' : '') + f.log + ` <span style="color:#94a3b8">[${fi + 1}/${frames.length}]</span>`;
+  }
+  $('existMode').onchange = () => { frames = buildFrames($('existMode').value === 'undo'); fi = 0; render(); };
+  $('existNext').onclick = () => { if (fi < frames.length - 1) { fi++; render(); } };
+  $('existPrev').onclick = () => { if (fi > 0) { fi--; render(); } };
+  $('existReset').onclick = () => { fi = 0; render(); };
+  render();
+})();
+
+/* ---- t6: 127 解空间图(词为节点围一圈, 路径高亮) ---- */
+(function initLadderGraph() {
+  const NS3 = 'http://www.w3.org/2000/svg';
+  const mk = (tag, attrs, text) => {
+    const el = document.createElementNS(NS3, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    if (text !== undefined) el.textContent = text;
+    return el;
+  };
+  // 词典图: 8 词围一圈 + 邻接边(差一字母)
+  const pos = {
+    hit: [240, 32], hot: [305, 62], dot: [330, 122], dog: [305, 182],
+    cog: [240, 212], log: [175, 182], lot: [150, 122], hop: [175, 62],
+  };
+  const edges = [
+    ['hit', 'hot'], ['hot', 'dot'], ['hot', 'lot'], ['hot', 'hop'],
+    ['dot', 'dog'], ['dot', 'lot'], ['dog', 'cog'], ['dog', 'log'],
+    ['lot', 'log'], ['log', 'cog'],
+  ];
+  const paths = [
+    ['hit-hot-dot-dog-cog', '#16a34a', '成功①(最短)'],
+    ['hit-hot-lot-log-cog', '#2563eb', '成功②(另一支)'],
+    ['hit-hot-hop', '#dc2626', '死支·墓碑'],
+    ['hit-hot-lot-dot-dog-log-cog', '#9333ea', '成功③(最长)'],
+  ];
+  function drawAll() {
+    const fig = $('graphLadder');
+    fig.innerHTML = '';
+    const svg = mk('svg', { viewBox: '0 0 480 245', width: '100%', 'max-width': '480px' });
+    fig.appendChild(svg);
+    // 每条词典边: 收集包含它的路径 → 平行线渲染(每路径一色)
+    const onPathOf = (a, b, p) => {
+      const seq = p[0].split('-');
+      for (let i = 0; i + 1 < seq.length; i++) {
+        if ((seq[i] === a && seq[i + 1] === b) || (seq[i] === b && seq[i + 1] === a)) return true;
+      }
+      return false;
+    };
+    // 底图灰边(不在任何路径上的)
+    edges.forEach(([a, b]) => {
+      const used = paths.some(p => onPathOf(a, b, p));
+      if (used) return;
+      const p1 = pos[a], p2 = pos[b];
+      svg.appendChild(mk('line', { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1],
+        stroke: '#e2e8f0', 'stroke-width': 1.5 }));
+    });
+    // 路径边: 平行偏移, 每条线一个颜色
+    edges.forEach(([a, b]) => {
+      const owners = paths.filter(p => onPathOf(a, b, p));
+      if (!owners.length) return;
+      const p1 = pos[a], p2 = pos[b];
+      const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+      const len = Math.hypot(dx, dy);
+      const nx = -dy / len, ny = dx / len; // 法线
+      // 缩短线段两端(避免盖住节点框)
+      const t0 = 0.16, t1 = 0.84;
+      const sx = p1[0] + dx * t0, sy = p1[1] + dy * t0;
+      const ex = p1[0] + dx * t1, ey = p1[1] + dy * t1;
+      owners.forEach((own, i) => {
+        const off = (i - (owners.length - 1) / 2) * 7;
+        svg.appendChild(mk('line', {
+          x1: sx + nx * off, y1: sy + ny * off,
+          x2: ex + nx * off, y2: ey + ny * off,
+          stroke: own[1], 'stroke-width': 3 }));
+      });
+    });
+    // 入口标记
+    const entry = pos['hit'], entry2 = pos['hot'];
+    svg.appendChild(mk('text', { x: (entry[0] + entry2[0]) / 2 + 10, y: (entry[1] + entry2[1]) / 2 - 10,
+      fill: '#16a34a', 'font-size': 10, 'font-weight': 700 }, '入口'));
+    // 节点
+    Object.entries(pos).forEach(([w, p]) => {
+      const isBegin = w === 'hit', isEnd = w === 'cog', isDead = w === 'hop';
+      svg.appendChild(mk('rect', {
+        x: p[0] - 26, y: p[1] - 15, width: 52, height: 30, rx: 8,
+        fill: isBegin ? '#1e293b' : isEnd ? '#a7f3d0' : isDead ? '#fee2e2' : '#f8fafc',
+        stroke: isDead ? '#dc2626' : isEnd ? '#059669' : '#475569',
+        'stroke-width': 2,
+        'stroke-dasharray': isDead ? '4 3' : 'none',
+      }));
+      svg.appendChild(mk('text', { x: p[0], y: p[1] + 4, 'text-anchor': 'middle',
+        fill: isBegin ? '#fff' : isDead ? '#991b1b' : '#1e293b',
+        'font-size': 12, 'font-weight': 700, 'font-family': 'Menlo' }, w));
+      if (isBegin) svg.appendChild(mk('text', { x: p[0], y: p[1] - 22, 'text-anchor': 'middle',
+        fill: '#1e293b', 'font-size': 10, 'font-weight': 700 }, 'begin'));
+      if (isEnd) svg.appendChild(mk('text', { x: p[0], y: p[1] - 22, 'text-anchor': 'middle',
+        fill: '#059669', 'font-size': 10, 'font-weight': 700 }, 'end'));
+      if (isDead) svg.appendChild(mk('text', { x: p[0], y: p[1] - 22, 'text-anchor': 'middle',
+        fill: '#dc2626', 'font-size': 10, 'font-weight': 700 }, '墓碑:永久'));
+    });
+    // 图例
+    const lg = $('ladderLegend');
+    lg.innerHTML = '';
+    paths.forEach(([p, c, name]) => {
+      const d = document.createElement('div');
+      d.innerHTML = `<span style="display:inline-block;width:26px;height:4px;background:${c};vertical-align:middle;margin-right:6px;border-radius:2px"></span>${name}: <span style="font-family:Menlo;font-size:11px">${p.split('-').join('→')}</span>`;
+      lg.appendChild(d);
+    });
+    $('ladderPathNote').innerHTML = '注意 <b>hit→hot</b> 边有 4 条平行线(四条路径都过入口), <b>dog→cog / log→cog</b> 各 2 条 —— 共享边一目了然。判定版里 hot 只进一次就永久标记, 后续路径不再重入: 不是漏, 是「已探明」。';
+  }
+  drawAll();
+})();
+
+/* ---- t5: 解空间图视角 ---- */
+(function initGraphTab() {
+  const NS2 = 'http://www.w3.org/2000/svg';
+  const mk = (tag, attrs, text) => {
+    const el = document.createElementNS(NS2, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    if (text !== undefined) el.textContent = text;
+    return el;
+  };
+  const k4pos = { 1: [190, 45], 2: [330, 155], 3: [190, 265], 4: [50, 155] };
+  const dagPos = { 1: [45, 160], 2: [155, 160], 3: [265, 160], 4: [375, 160] };
+
+  function drawGraph(figureId, pos, directed, path, noteId, notes) {
+    const fig = $(figureId);
+    fig.innerHTML = '';
+    const svg = mk('svg', { viewBox: '0 0 420 310', width: '100%', 'max-width': '420px' });
+    fig.appendChild(svg);
+    const vals = Object.keys(pos).map(Number);
+    // 边集合
+    const allEdges = [];
+    for (let a = 1; a <= 4; a++) for (let b = 1; b <= 4; b++) {
+      if (a === b) continue;
+      if (directed ? a < b : a < b) allEdges.push([a, b]);   // K4 无向 6 条 / DAG 有向 6 条
+    }
+    // 路径解析
+    const seq = path ? path.split('-').map(Number) : [];
+    const pathEdges = [];
+    for (let i = 0; i + 1 < seq.length; i++) {
+      let [a, b] = [seq[i], seq[i + 1]];
+      const key = directed ? a + '->' + b : Math.min(a, b) + '-' + Math.max(a, b);
+      pathEdges.push({ a, b, key, exists: allEdges.some(e =>
+        directed ? (e[0] === a && e[1] === b) : (Math.min(e[0],e[1]) === Math.min(a,b) && Math.max(e[0],e[1]) === Math.max(a,b))) });
+    }
+    // 画底图边
+    allEdges.forEach(([a, b]) => {
+      const p1 = pos[a], p2 = pos[b];
+      const inPath = pathEdges.filter(e => e.exists).some(e =>
+        directed ? (e.a === a && e.b === b) : (Math.min(e.a,e.b) === a && Math.max(e.a,e.b) === b));
+      const ln = mk('line', { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1],
+        stroke: inPath ? '#2563eb' : '#cbd5e1', 'stroke-width': inPath ? 4 : 1.5 });
+      if (directed) {
+        ln.setAttribute('marker-end', 'url(#arrow)');
+        // 缩短线段给箭头留位置
+        const t = 0.82, x2 = p1[0] + (p2[0]-p1[0])*t, y2 = p1[1] + (p2[1]-p1[1])*t;
+        ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
+      }
+      svg.appendChild(ln);
+    });
+    // DAG 箭头 marker(定义一次)
+    if (directed) {
+      const defs = mk('defs');
+      const marker = mk('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: 9, refY: 5,
+        markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' });
+      marker.appendChild(mk('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#94a3b8' }));
+      defs.appendChild(marker); svg.insertBefore(defs, svg.firstChild);
+    }
+    // 非法边(路径中不存在的): 红虚线 + x
+    pathEdges.filter(e => !e.exists).forEach(e => {
+      const p1 = pos[e.a], p2 = pos[e.b];
+      svg.appendChild(mk('line', { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1],
+        stroke: '#dc2626', 'stroke-width': 2.5, 'stroke-dasharray': '5 4' }));
+      svg.appendChild(mk('text', { x: (p1[0]+p2[0])/2, y: (p1[1]+p2[1])/2 - 6,
+        'text-anchor': 'middle', fill: '#dc2626', 'font-size': '16', 'font-weight': '700' }, 'x'));
+    });
+    // 画节点(访问序 + 重访标记)
+    const seen = {};
+    const order = {};
+    seq.forEach((v, i) => {
+      if (seen[v] !== undefined) order[v] = 'dup'; else { seen[v] = i; order[v] = i; }
+    });
+    vals.forEach(v => {
+      const p = pos[v];
+      const isDup = order[v] === 'dup';
+      const ord = typeof order[v] === 'number' ? order[v] : -1;
+      const active = ord >= 0 || isDup;
+      svg.appendChild(mk('circle', { cx: p[0], cy: p[1], r: 18,
+        fill: isDup ? '#dc2626' : active ? '#2563eb' : '#f1f5f9',
+        stroke: isDup ? '#991b1b' : active ? '#1e40af' : '#cbd5e1', 'stroke-width': active ? 3 : 1.5 }));
+      svg.appendChild(mk('text', { x: p[0], y: p[1] + 4, 'text-anchor': 'middle',
+        fill: active ? '#fff' : '#334155', 'font-weight': '700', 'font-size': '13' }, String(v)));
+      if (ord >= 0) svg.appendChild(mk('text', { x: p[0] + 22, y: p[1] - 12,
+        fill: '#1e40af', 'font-size': '11', 'font-weight': '700' }, '#' + (ord + 1)));
+      if (isDup) svg.appendChild(mk('text', { x: p[0] + 22, y: p[1] - 12,
+        fill: '#dc2626', 'font-size': '11', 'font-weight': '700' }, '重访'));
+    });
+    $(noteId).innerHTML = notes;
+  }
+
+  // 下拉选项
+  const permOptions = [
+    ['1-2-3-4', '<b style="color:#16a34a">合法</b>: 哈密顿路径之一。4! = 24 条, 每点恰一次 —— visited 执法下的产物。'],
+    ['2-4-1-3', '<b style="color:#16a34a">合法</b>: 交叉路径。无向完全图里任何元素都能接任何元素, 唯一禁令是「不能重访」。'],
+    ['1-2-1-3', '<b style="color:#dc2626">非法: 节点 1 重访</b>。注意边 (2,1) 在无向图里<b>存在</b> —— 没有 used 拦截, DFS 就会这么走。这就是「重访诱惑」: 无向图不会替你执法, visited 才是「每点恰一次」的执法者。'],
+    ['3-2-3-4', '<b style="color:#dc2626">非法: 节点 3 重访</b>。同上 —— 边都在, 唯一缺的是约束。'],
+  ];
+  const dagOptions = [
+    ['2-4', '<b style="color:#16a34a">合法</b>: C(4,2) 的组合之一。2 节点路径 = 2 元子集。'],
+    ['1-2-4', '<b style="color:#16a34a">合法</b>: 3 节点路径 = 子集 {1,2,4}。任意长度路径合计 2^4 = 16 个。'],
+    ['1-2-3-4', '<b style="color:#16a34a">合法</b>: 全链 —— 唯一的最大路径。'],
+    ['4-2', '<b style="color:#dc2626">非法: 边 4→2 不存在</b>。DAG 里只修了「小→大」的路 —— 递增剪枝不是「检查后丢弃」, 是「这条路根本没修」。所以不需要 visited: 图结构本身封死了回头路。'],
+    ['2-1-4', '<b style="color:#dc2626">非法: 2→1 不存在</b>(1→4 存在也救不了)。方向即约束: start 推进后, 身后的世界永久关闭。'],
+  ];
+  function fill(selId, opts, figureId, pos, directed, noteId) {
+    const sel = $(selId);
+    opts.forEach(([p, note], i) => {
+      const o = document.createElement('option');
+      o.value = p; o.textContent = p + (i >= 2 && selId === 'permPathSel' || i >= 3 ? '  (非法)' : '');
+      sel.appendChild(o);
+    });
+    const render = () => {
+      const [p, note] = opts.find(o => o[0] === sel.value);
+      drawGraph(figureId, pos, directed, p, noteId, note);
+    };
+    sel.onchange = render;
+    render();
+  }
+  fill('permPathSel', permOptions, 'graphK4', k4pos, false, 'permPathNote');
+  fill('dagPathSel', dagOptions, 'graphDAG', dagPos, true, 'dagPathNote');
+})();
+
+/* ---- URL 参数支持(?mode=combine&n=4&k=2): 直达指定模式, 便于验证与分享 ---- */
+(function applyUrlParams() {
+  const p = new URLSearchParams(location.search);
+  const m = p.get('mode');
+  if (m === 'combine' || m === 'subsets' || m === 'permute') {
+    $('modeSel').value = m;
+    // 与 modeSel.onchange 相同的 n 选项重建逻辑
+    const nSel = $('nSel');
+    if (m === 'combine') {
+      $('kWrap').style.display = '';
+      nSel.innerHTML = '<option>2</option><option>3</option><option selected>4</option><option>5</option>';
+      if (p.get('n')) nSel.value = p.get('n');
+      if (p.get('k')) $('kSel').value = p.get('k');
+    } else if (m === 'subsets') {
+      nSel.innerHTML = '<option>1</option><option>2</option><option selected>3</option><option>4</option>';
+      if (p.get('n')) nSel.value = p.get('n');
+    } else {
+      nSel.innerHTML = '<option>2</option><option selected>3</option><option>4</option><option>5</option>';
+      if (p.get('n')) nSel.value = p.get('n');
+    }
+    mode = m;
+  }
+})();
+
+resetAll();
+</script>
+</body>
+</html>

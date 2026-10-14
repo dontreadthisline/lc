@@ -2,7 +2,11 @@ package lc
 
 import "math"
 
+/*
+../mother-problems/0124-二叉树中的最大路径和.md
+*/
 // MaxPathSum 最大路径和
+
 func MaxPathSum(root *TreeNode) int {
 	res := math.MinInt
 	var dfs func(*TreeNode,[]int)

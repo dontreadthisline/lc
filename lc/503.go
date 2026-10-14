@@ -33,7 +33,6 @@ func NextGreaterElements(nums []int) []int {
 		if len(stack) <= 0 {
 			stack = append(stack,num)
 		}
-
 	}
 	return res
 }

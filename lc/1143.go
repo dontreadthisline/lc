@@ -34,6 +34,20 @@ package lc
 - text1 和 text2 仅由小写英文字符组成。
 */
 
-func LongestCommonSubsequence(text1 string, text2 string) int {
-	panic("TODO")
+func LongestCommonSubsequence(t1 string, t2 string) int {
+	m,n := len(t1),len(t2)
+	dp := make([][]int,m+1)
+	for i := 0; i <= m; i++ {
+		dp[i] = make([]int,n+1)
+	}
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			if t1[i-1] == t2[j-1] {
+				dp[i][j] = dp[i-1][j-1] + 1
+			} else {
+				dp[i][j] = max(dp[i][j-1],dp[i-1][j])
+			}
+		}
+	}
+	return dp[m][n]
 }

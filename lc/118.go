@@ -16,10 +16,24 @@ package lc
 输出: [[1]]
 
 提示:
-
+1
+1,1
+1,2,1
+1,3,3,1
 - 1 <= numRows <= 30
 */
 
-func Generate(numRows int) [][]int {
-	panic("TODO")
+func Generate(n int) [][]int {
+	res := make([][]int,n)
+	for i := range n {
+		res[i] = make([]int,i+1)
+		for j := 0; j <= i; j++ {
+			if j == 0  || j == i{
+				res[i][j] = 1
+			} else {
+				res[i][j] = res[i-1][j-1] + res[i-1][j]
+			}
+		}
+	}
+	return res
 }

@@ -51,7 +51,7 @@
 | 14-18 | 堆/位/设/矩/排 | 10/12 | 接近通关 |
 
 **做错队列**（修复推导已在对应家族文档中）：
-- 142 环形链表II → 家族 6 文档 §5 Floyd 二阶段（注意：其测试 TestDetectCycle 会挂起，跑测试时需 -skip 隔离）
+- 142 环形链表II → 家族 6 文档 §5 Floyd 二阶段（挂起根因已查明：不足算法死循环，是测试报错用 %v 打印带环节点触发 ListNode.String() 无限遍历；types.go 已加防环截断，测试现正常报红：返回相遇点而非入环口 + 单节点无环误返头节点）
 - 124 最大路径和 → 家族 7 文档 §6 两本账
 - 994 腐烂的橘子 → 需要加层快照 + 队列入队 + 不可达检查
 - 127 单词接龙 → 需要隐式图（逐位变异）替代预建图
@@ -85,7 +85,7 @@
 ### Agent 侧
 1. **函数名大小写**：用户写小写，测试调不到。检查前先 `grep '^func [A-Z]'`
 2. **半成品挡编译**：停车 → 跑测试 → 用户保存恢复
-3. **死循环测试**：跑测试必须带 `-timeout`，有挂起用 `-run` 隔离
+3. **死循环测试**：跑测试必须带 `-timeout`。注意挂起可能不在被测算法里，而在错误报告路径（如带环结构体被 %v 打印）
 4. **凭记忆写题面**：会编错。题面必须实时抓取或从文件读
 5. **测试数据写错**：期望值/生成器越界。对拍双向无免检
 6. **LCA"语义过载"**：标准解法返回值有多重含义。我给的"干净版"反而漏了祖先 case
@@ -126,7 +126,7 @@ python3 scripts/check_progress.py 2>&1 | grep '✗'
 # 预期红色：做错 8 道对应的测试（TestPermute/TestMergeRange/TestEraseOverlapIntervals/
 # TestNextGreaterElements/TestDeleteNode/TestMaxPathSum/TestOrangesRotting/TestLadderLength 等）
 # 以及 TestSearchPeakBruteForceAlgs（162 的暴力参照版自身有 bug，完成依据是二分版）
-# TestDetectCycle 会挂起，check_progress 已用 -skip 跳过
+# TestDetectCycle 挂起已修复(types.go String() 防环)，现为普通红测试
 
 # 4. 按"下一步优先级"推进
 ```

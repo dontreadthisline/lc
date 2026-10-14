@@ -1,8 +1,10 @@
 package lc
 
+import "slices"
+
 /*
 字典 wordList 中从单词 beginWord* *到 endWord 的 转换序列 是一个按下述规格形成的序列 beginWord -> s_1 -> s_2 -> ... -> s_k：
-
+//  family8_test.go:62: LadderLength("aaa", "zzz", [aaa bbb ccc zzz]) = 1, want 0
 - 每一对相邻的单词只差一个字母。
 
 -  对于 1 <= i <= k 时，每个 s_i 都在 wordList 中。注意， beginWord* *不需要在 wordList 中。
@@ -41,42 +43,88 @@ package lc
 */
 
 func LadderLength(begin string, end string, wordList []string) int {
-
-	graph := make(map[string][]string,len(wordList))
+	words := make(map[string]bool,len(wordList))
 	for _,word := range wordList {
-		for _,adj := range wordList {
-			if word != adj {
-				graph[word] = append(graph[word],adj)
-			}
-		}
-	} //有缩短预先构建图的时间效率么?
+		words[word] = true
+	}
 
-	if len(graph[begin]) <= 0 || len(graph[end]) <= 0 {
+	if !words[end] {
 		return 0
 	}
 
-	var bfs func(string, string) int
-	bfs = func(begin, end string)  int {
-		var cnt int
-		visited := map[string]bool{}
+	visited := map[string]bool{}
+	bfs := func(begin, end string)  int {
+		cnt := 1//初始单词也算
 		visited[begin] = true
 		queue := []string{begin}
 		for len(queue) > 0 {
-			word := queue[0]
-			for _,adj := range graph[word] {
-				if adj == end {
-					goto ret
+			for range len(queue) {
+				word := queue[0]
+				if word == end {
+					return cnt
 				}
-				if !visited[adj] {
-					queue = append(queue,adj)
-					visited[adj] = true
+				//visited adj
+				for i := range len(word) {
+					for j := range 26 {
+						tmp := []byte(word)
+						tmp[i] = byte('a' + j)
+						adj := string(tmp)
+						if !visited[adj] && words[adj] {
+							queue = append(queue,adj)
+							visited[adj] = true
+						}
+					}
 				}
+				queue = queue[1:]
 			}
 			cnt += 1
-			queue = queue[1:len(queue)]
-		}
-		ret:
-		return cnt
+	  }
+		//如果没有路径,就返回0
+		return 0
 	}
 	return bfs(begin,end)
+}
+
+/*
+* 图类型, 普通图(类比阶乘),虚拟节点起点:起点单词,图的边构成:仅有单个位置不同的单词对
+*
+* 搜索类型:全路径,限制:不可重用节点。
+* 套用模型: path_search:AllPathSimple
+*/
+
+func LadderLengthPath(begin string, end string, wordList []string) [][]string {
+	words := make(map[string]bool,len(wordList))
+	for _,word := range wordList {
+		words[word] = true
+	}
+
+	var res [][]string
+	if !words[end] {
+		return  res
+	}
+
+	visited := map[string]bool{}
+	var dfs func( string,string, []string)
+
+	dfs = func(cur,to string,path []string) {
+		if cur == to {
+			res = append(res,slices.Clone(path))
+			return
+		}
+		visited[cur] = true
+		for i := range len(cur) {
+			for j := range 26 {
+				tmp := []byte(cur)
+				tmp[i] = byte('a' + j)
+				adj := string(tmp)
+				if !visited[adj] && words[adj] {
+					dfs(adj,to,append(path,adj))
+				}
+			}
+		}
+		visited[cur] = false
+	}
+
+	dfs(begin,end,[]string{begin})
+	return res
 }

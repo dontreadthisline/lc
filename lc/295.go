@@ -5,4 +5,4 @@ type MedianFinder struct{}
 
 func Constructor() MedianFinder { return MedianFinder{} }
 func (mf *MedianFinder) AddNum(num int) {}
-func (mf *MedianFinder) FindMedian() int { return 0 }
+func (mf *MedianFinder) FindMedian() float64 { return 0 }

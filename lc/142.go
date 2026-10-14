@@ -35,6 +35,9 @@ package lc
 
 进阶：你是否可以使用 O(1) 空间解决此题？
 */
+//其中x是环之前的长度,y是环的长度
+//x + y == l
+//x +
 
 func DetectCycle(head *ListNode) *ListNode {
 	fast, slow := head, head
@@ -45,7 +48,12 @@ func DetectCycle(head *ListNode) *ListNode {
 			return fast
 		}
 	}
-	return nil
+	//相遇点,可能在环的入口处,也可能在环的其他地方,不确定。
+	//如何根据下一阶段返回
+	if fast == nil {
+		return nil
+	}
+	return fast //todo modify
 }
 
 func DetectCycleHashWay(head *ListNode) *ListNode {

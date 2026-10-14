@@ -33,12 +33,30 @@ package lc
 输出：6
 
 提示：
-
+1,1,1
+1,2,3
+1,3,6
 - 1 <= m, n <= 100
 
 - 题目数据保证答案小于等于 2 * 10^9
 */
 
 func UniquePaths(m int, n int) int {
-	panic("TODO")
+	dp := make([][]int,m)
+	for i := range m {
+		dp[i] = make([]int,n)
+		dp[i][0] = 1
+	}
+
+	for i := range n {
+		dp[0][i] = 1
+	}
+
+	for i := 1; i < m; i++ {
+		for j := 1; j < n; j++ {
+			dp[i][j] = dp[i-1][j] + dp[i][j-1]
+		}
+	}
+
+	return dp[m-1][n-1]
 }

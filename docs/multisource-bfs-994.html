@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多源 BFS 可视化 — 腐烂的橘子 (LeetCode 994)</title>
+<style>
+  :root {
+    --fresh: #f59e0b;       /* 新鲜橘子 橙 */
+    --fresh-dark: #b45309;
+    --rot: #4a2c17;         /* 腐烂 深褐 */
+    --rot-spot: #7a8b3a;    /* 霉点 */
+    --empty: #eef1f4;
+    --accent: #2563eb;      /* 当前出队 蓝 */
+    --infect: #eab308;      /* 新感染 黄 */
+    --ok: #16a34a;
+    --bad: #dc2626;
+    --ink: #1e293b;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f6f7f9; color: var(--ink); line-height: 1.65; padding: 24px;
+  }
+  header { max-width: 1180px; margin: 0 auto 18px; }
+  header h1 { font-size: 22px; }
+  header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  main { max-width: 1180px; margin: 0 auto; display: grid; gap: 18px; }
+
+  .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+
+  /* ---------- 控制区 ---------- */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .controls select, .controls button {
+    padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1;
+    background: #fff; font-size: 13px; cursor: pointer; color: var(--ink);
+  }
+  .controls button:hover { background: #f1f5f9; }
+  .controls button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .controls button.primary:hover { background: #1d4ed8; }
+  .controls label { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .controls input[type=range] { accent-color: var(--accent); }
+  .toggle-edit { border-color: var(--infect) !important; }
+
+  /* ---------- 棋盘区 ---------- */
+  .boards { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 14px; }
+  .board { }
+  .board h3 { font-size: 14px; margin-bottom: 8px; color: var(--muted); font-weight: 600; }
+  .board h3 .result { margin-left: 8px; font-size: 15px; font-weight: 700; }
+  .result.ok { color: var(--ok); }
+  .result.bad { color: var(--bad); }
+  .grid { display: grid; gap: 5px; padding: 10px; background: #e2e8f0; border-radius: 10px; width: fit-content; }
+  .cell {
+    width: 46px; height: 46px; border-radius: 8px; background: var(--empty);
+    position: relative; display: flex; align-items: center; justify-content: center;
+    transition: background .18s;
+  }
+  .cell .fruit { width: 30px; height: 30px; border-radius: 50%; position: relative; }
+  .cell.fresh .fruit {
+    background: radial-gradient(circle at 34% 30%, #fcd34d 0%, var(--fresh) 55%, var(--fresh-dark) 100%);
+    box-shadow: inset -3px -4px 6px rgba(0,0,0,.18);
+  }
+  .cell.rot .fruit {
+    background: radial-gradient(circle at 40% 35%, #6b4423 0%, var(--rot) 70%);
+    box-shadow: inset -3px -4px 6px rgba(0,0,0,.4);
+  }
+  .cell.rot .fruit::after {   /* 霉点 */
+    content: ""; position: absolute; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--rot-spot); top: 7px; left: 11px;
+    box-shadow: 9px 6px 0 -1px var(--rot-spot), -4px 8px 0 -2px var(--rot-spot);
+  }
+  .cell.cur { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .cell.srcflash .fruit { animation: pop .3s; }
+  @keyframes pop { 50% { transform: scale(1.25); } }
+  .cell.justInfected { outline: 3px solid var(--infect); outline-offset: 1px; }
+  .cell.justInfected::after {  /* 感染波纹 */
+    content: ""; position: absolute; inset: -6px; border-radius: 12px;
+    border: 3px solid var(--infect); animation: ripple .5s ease-out forwards;
+  }
+  @keyframes ripple { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+  .coord { position: absolute; bottom: 1px; right: 3px; font-size: 9px; color: #94a3b8; user-select: none; }
+  .edit-hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .edit-hint b { color: var(--fresh-dark); }
+
+  .stats { margin-top: 10px; display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+  .minute-big { font-size: 34px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .minute-big small { font-size: 13px; font-weight: 400; color: var(--muted); margin-right: 2px; }
+  .badge { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: #f1f5f9; color: var(--muted); }
+  .badge.rot { background: #fef3c7; color: #92400e; }
+  .badge.idle { background: #fee2e2; color: var(--bad); }
+
+  /* ---------- 队列可视化 ---------- */
+  .queue-panel { margin-top: 14px; }
+  .queue-panel h4, .code-panel h4, .log-panel h4 { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  .queue-strip {
+    display: flex; align-items: stretch; gap: 3px; flex-wrap: wrap;
+    background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px;
+    padding: 8px; min-height: 48px;
+  }
+  .q-group { display: flex; gap: 3px; padding-right: 8px; margin-right: 5px; border-right: 3px solid #cbd5e1; }
+  .q-group:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+  .q-group:nth-child(odd) { background: rgba(37,99,235,.05); border-radius: 6px; padding: 3px 8px 3px 3px; }
+  .q-group .grouptag {
+    writing-mode: vertical-lr; font-size: 9px; color: #94a3b8; text-align: center; letter-spacing: 1px;
+    margin-right: 2px;
+  }
+  .q-item {
+    width: 40px; height: 34px; border-radius: 6px; background: var(--rot); color: #fde68a;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums; position: relative;
+  }
+  .q-item.head { outline: 3px solid var(--accent); outline-offset: 1px; animation: pop .25s; }
+  .q-item.newest { outline: 3px solid var(--infect); outline-offset: 1px; }
+  .q-empty { color: #94a3b8; font-size: 12px; align-self: center; padding: 0 6px; }
+  .queue-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* ---------- 伪代码 ---------- */
+  .code-panel { margin-top: 14px; }
+  .code {
+    background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 12px 0;
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; overflow-x: auto;
+  }
+  .code .ln { display: flex; padding: 1px 14px; white-space: pre; border-left: 4px solid transparent; }
+  .code .ln .no { width: 2.2em; color: #475569; user-select: none; }
+  .code .ln.hl { background: rgba(37,99,235,.28); border-left-color: var(--accent); }
+  .code .ln.key { background: rgba(234,179,8,.22); border-left-color: var(--infect); }
+  .code .cm { color: #64748b; }
+
+  /* ---------- 日志 ---------- */
+  .log-panel { margin-top: 14px; }
+  .log {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+    height: 150px; overflow-y: auto; padding: 10px 12px; font-size: 12.5px; font-family: Menlo, monospace;
+  }
+  .log .layermark { color: var(--accent); font-weight: 700; }
+  .log .infectline { color: #92400e; }
+  .log .idleline { color: var(--bad); font-weight: 600; }
+  .log .finishline { font-weight: 700; }
+  .log .finishline.ok { color: var(--ok); } .log .finishline.bad { color: var(--bad); }
+  .log div { padding: 1px 0; }
+
+  /* ---------- 论证区 ---------- */
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tabs button {
+    padding: 7px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff;
+    font-size: 13px; cursor: pointer; color: var(--muted);
+  }
+  .tabs button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .tabbody > div { display: none; }
+  .tabbody > div.active { display: block; }
+  .tabbody h3 { font-size: 16px; margin: 10px 0 8px; }
+  .tabbody ol, .tabbody ul { padding-left: 22px; margin: 8px 0; }
+  .tabbody li { margin: 7px 0; font-size: 14px; }
+  .tabbody code {
+    background: #f1f5f9; border-radius: 5px; padding: 1px 6px;
+    font-family: Menlo, monospace; font-size: 12.5px; color: #be185d;
+  }
+  .keybox { border-left: 4px solid var(--accent); background: #eff6ff; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: 14px; }
+  .keybox b { color: var(--accent); }
+  .warnbox { border-left: 4px solid var(--bad); background: #fef2f2; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: 14px; }
+  figure { text-align: center; margin: 16px 0; }
+  figure svg { max-width: 100%; height: auto; }
+  figcaption { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .cmp { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .cmp > div { flex: 1; min-width: 240px; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; font-size: 13px; }
+  .cmp h4 { font-size: 13.5px; margin-bottom: 6px; }
+  .cmp .good { color: var(--ok); } .cmp .badc { color: var(--bad); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>多源 BFS 可视化 — 腐烂的橘子（LeetCode 994）</h1>
+  <p>逐帧动画与伪代码同步：看清楚「所有源入队」为什么是唯一要改的地方、层快照 <code>for range len(queue)</code> 如何圈层、以及「本轮有感染才 minute++」的边界语义。</p>
+</header>
+
+<main>
+  <!-- ============ 动画舞台 ============ -->
+  <section class="panel">
+    <div class="controls">
+      <label>预设
+        <select id="preset"></select>
+      </label>
+      <button class="primary" id="btnPlay">播放</button>
+      <button id="btnStep">单步</button>
+      <button id="btnReset">重置</button>
+      <label>速度 <input type="range" id="speed" min="1" max="10" value="5"></label>
+      <button id="btnEdit">编辑网格</button>
+      <button id="btnContrast">单源对照: 关</button>
+    </div>
+
+    <div class="boards">
+      <div class="board" id="boardMain">
+        <h3>多源 BFS（正确解法）<span class="result" id="resultMain"></span></h3>
+        <div class="grid" id="gridMain"></div>
+        <div class="stats">
+          <div class="minute-big"><small>minute</small><span id="minuteMain">0</span></div>
+          <span class="badge" id="freshMain">新鲜 0</span>
+          <span class="badge rot" id="rotBadgeMain">本轮感染 0</span>
+        </div>
+      </div>
+      <div class="board" id="boardContrast" style="display:none">
+        <h3>单源对照（只把第一个 2 入队）<span class="result" id="resultContrast"></span></h3>
+        <div class="grid" id="gridContrast"></div>
+        <div class="stats">
+          <div class="minute-big"><small>minute</small><span id="minuteContrast">0</span></div>
+          <span class="badge" id="freshContrast">新鲜 0</span>
+        </div>
+        <p class="edit-hint" style="max-width:260px">同样 的网格，右下角那个初始 2 因为<b>没进队列</b>而成为死源——它周围的橘子只能等左上的波传过来。</p>
+      </div>
+    </div>
+
+    <div class="queue-panel">
+      <h4>队列可视化（颜色分组 = 层快照，竖线是层边界，左边为本层待处理）</h4>
+      <div class="queue-strip" id="queueStrip"></div>
+      <div class="queue-note" id="queueNote">初始化：所有值为 2 的格子同时入队——它们共同构成「第 0 层」。</div>
+    </div>
+
+    <div class="code-panel">
+      <h4>同步伪代码（高亮行 = 当前执行位置）</h4>
+      <div class="code" id="code"></div>
+    </div>
+
+    <div class="log-panel">
+      <h4>执行日志</h4>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+
+  <!-- ============ 论证区 ============ -->
+  <section class="panel">
+    <div class="tabs">
+      <button class="active" data-tab="t1">为什么多源只需改初始化</button>
+      <button data-tab="t2">超级源点图解</button>
+      <button data-tab="t3">三个经典翻车点</button>
+    </div>
+    <div class="tabbody">
+      <div class="active" id="t1">
+        <h3>核心论证：BFS 循环体对「队列内容的来历」一无所知</h3>
+        <div class="keybox">
+          单源 BFS 与多源 BFS 的全部区别，就是队列的<b>初始内容</b>。循环体（出队 → 查四邻 → 入队）一个字都不用改。
+        </div>
+        <ol>
+          <li><b>BFS 的不变量</b>：任意时刻，队列里的元素都位于「同一距离层」（至多跨相邻两层）。初始入队 {s} 意味着宣告「距离为 0 的点 = {s}」；初始入队 {s<sub>1</sub>…s<sub>k</sub>} 意味着宣告「距离为 0 的点 = 源集合」。之后每一轮扩散都严格把距离 +1，这个性质与第 0 层有几个点毫无关系。</li>
+          <li><b>循环体无来源感知</b>：<code>出队 → 检查四邻是否为 1 → 标 2 → 入队</code> 这组操作从不关心出队元素是「原始腐烂源」还是「刚被感染的橘子」。第 0 层是 1 个点还是 50 个点，操作完全相同。</li>
+          <li><b>答案语义 = min 距离</b>：橘子 v 的腐烂时刻 = min<sub>i</sub> dist(s<sub>i</sub>, v)（离哪个源近就听谁的）。BFS 按距离升序逐层扩张，第一次触达 v 的层号恰好就是这个 min。起点从一个变成多个，「按距离升序扩张」的性质不变，正确性不变。</li>
+          <li><b>时间复杂度仍是 O(mn)</b>：每个格子至多入队一次、出队一次。多源不是「跑 k 遍单源」（那是 O(k·mn)），而是所有源<b>合起来</b>当第 0 层，一遍扫完。</li>
+        </ol>
+        <div class="warnbox">
+          常见误区：「多源 = 对每个源各跑一遍单源 BFS 再取 min」。能得到正确答案，但浪费：格子会被重复访问。正确做法是把 min 的语义直接折叠进初始队列——这正是「把起点都加入队列」的本质。
+        </div>
+      </div>
+
+      <div id="t2">
+        <h3>超级源点归约：多源 BFS 严格等价于一次单源 BFS</h3>
+        <p>构造一个虚拟节点 S，从 S 向每个腐烂源连一条<b>零长边</b>。那么：</p>
+        <figure>
+          <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg">
+            <!-- 左：单源 -->
+            <text x="150" y="24" text-anchor="middle" font-size="14" fill="#1e293b" font-weight="700">单源 BFS</text>
+            <circle cx="150" cy="110" r="20" fill="#2563eb"/>
+            <text x="150" y="115" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">s</text>
+            <circle cx="150" cy="110" r="44" fill="none" stroke="#93c5fd" stroke-dasharray="4 3"/>
+            <circle cx="150" cy="110" r="70" fill="none" stroke="#bfdbfe" stroke-dasharray="4 3"/>
+            <circle cx="150" cy="110" r="96" fill="none" stroke="#dbeafe" stroke-dasharray="4 3"/>
+            <text x="150" y="230" text-anchor="middle" font-size="11" fill="#64748b">第 0 层 = {s}</text>
+            <text x="150" y="248" text-anchor="middle" font-size="11" fill="#64748b">队列初始：1 个元素</text>
+            <!-- 右：超级源 -->
+            <text x="470" y="24" text-anchor="middle" font-size="14" fill="#1e293b" font-weight="700">多源 BFS = 超级源 S 的单源 BFS</text>
+            <circle cx="470" cy="70" r="22" fill="#dc2626"/>
+            <text x="470" y="75" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">S</text>
+            <text x="502" y="62" font-size="10" fill="#dc2626">虚拟节点, 不存在原图中</text>
+            <!-- 三个源 -->
+            <circle cx="360" cy="150" r="16" fill="#4a2c17"/><text x="360" y="155" text-anchor="middle" font-size="10" fill="#fde68a">s1</text>
+            <circle cx="470" cy="170" r="16" fill="#4a2c17"/><text x="470" y="175" text-anchor="middle" font-size="10" fill="#fde68a">s2</text>
+            <circle cx="580" cy="150" r="16" fill="#4a2c17"/><text x="580" y="155" text-anchor="middle" font-size="10" fill="#fde68a">s3</text>
+            <!-- S 到源的零长边 -->
+            <line x1="456" y1="88" x2="372" y2="138" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4"/>
+            <line x1="470" y1="92" x2="470" y2="154" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4"/>
+            <line x1="484" y1="88" x2="568" y2="138" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4"/>
+            <text x="395" y="105" font-size="10" fill="#dc2626">0</text>
+            <text x="475" y="125" font-size="10" fill="#dc2626">0</text>
+            <text x="540" y="105" font-size="10" fill="#dc2626">0</text>
+            <!-- 扩散圈 -->
+            <circle cx="360" cy="150" r="40" fill="none" stroke="#fcd9b8" stroke-dasharray="4 3"/>
+            <circle cx="470" cy="170" r="40" fill="none" stroke="#fcd9b8" stroke-dasharray="4 3"/>
+            <circle cx="580" cy="150" r="40" fill="none" stroke="#fcd9b8" stroke-dasharray="4 3"/>
+            <circle cx="360" cy="150" r="66" fill="none" stroke="#fde8d5" stroke-dasharray="4 3"/>
+            <circle cx="470" cy="170" r="66" fill="none" stroke="#fde8d5" stroke-dasharray="4 3"/>
+            <circle cx="580" cy="150" r="66" fill="none" stroke="#fde8d5" stroke-dasharray="4 3"/>
+            <!-- 目标点 v -->
+            <circle cx="470" cy="240" r="13" fill="#f59e0b"/>
+            <text x="470" y="245" text-anchor="middle" font-size="11" font-weight="700" fill="#7c2d12">v</text>
+            <text x="470" y="272" text-anchor="middle" font-size="11" fill="#64748b">腐烂时刻 = min(dist(s1,v), dist(s2,v), dist(s3,v)) = dist(S,v)</text>
+          </svg>
+          <figcaption>「处理 S，把 S 的邻居全部入队」这一步，恰好等价于「初始化时把所有源入队」——形状完全相同，只是省掉了 S 本身。这就是数学上严格的等价，不是近似。</figcaption>
+        </figure>
+        <ul>
+          <li>在扩展图上从 S 跑标准单源 BFS：第一层扩散把 s<sub>1</sub>、s<sub>2</sub>、s<sub>3</sub> 全部入队（零长边，同为距离 1）。</li>
+          <li>删掉 S、直接把 s<sub>1</sub>、s<sub>2</sub>、s<sub>3</sub> 当作初始队列——从第二层起两种执行<b>逐帧相同</b>。</li>
+          <li>所以：多源 BFS 不需要任何新算法，只需把「第 0 层」从 {s} 换成 {s<sub>1</sub>…s<sub>k</sub>}。对照上方动画勾选「单源对照」，直观感受第 0 层选错（漏掉源）的后果。</li>
+        </ul>
+      </div>
+
+      <div id="t3">
+        <h3>三个经典翻车点（都用测试用例钉死了）</h3>
+        <div class="cmp">
+          <div>
+            <h4 class="badc">翻车 1：新感染者不入队</h4>
+            <p>格子标了 2 却没有 <code>queue = append(queue, ...)</code>。BFS 只活一层：第 1 分钟后队列空了，远处的新鲜橘子再也等不到波。</p>
+            <p>测试：<code>[[2,2,1],[2,1,0],[0,1,1]]</code> 会错误地返回 -1（明明可达）。</p>
+          </div>
+          <div>
+            <h4 class="badc">翻车 2：每层无条件 minute++</h4>
+            <p>最后一层只是把队列清空，没有任何橘子腐烂，这一分钟不存在。</p>
+            <p>测试：<code>[[2]]</code> 会错误地返回 1，正确答案是 0。解法就是动画里的 <code>rotted</code> 标记——本轮真的感染了东西才计时。</p>
+          </div>
+          <div>
+            <h4 class="badc">翻车 3：忘记不可达检查</h4>
+            <p>队列跑完不等于全部腐烂。用 <code>感染数 cnt 与初始新鲜数 fresh 对账</code>，或扫一遍网格还有没有 1，有则返回 -1。</p>
+            <p>测试：<code>[[2,1,1],[0,1,1],[1,0,1]]</code> 左下角被隔死，正确答案是 -1。</p>
+          </div>
+        </div>
+        <div class="keybox" style="margin-top:14px">
+          三个翻车点分别对应算法的三个部位：<b>接棒（入队）</b>、<b>计时（层语义）</b>、<b>对账（终止条件）</b>。多源反而是最不容易错的部分——它只是初始化。
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+'use strict';
+
+/* ================= 预设 ================= */
+const PRESETS = {
+  official1: { name: '官方1 · 单源 4 分钟', grid: [[2,1,1],[1,1,0],[0,1,1]] },
+  dual:      { name: '双源对角 · 看 min 距离', grid: [[2,1,1,1],[1,1,1,1],[1,1,1,2]] },
+  reach:     { name: '官方2 · 不可达 -1', grid: [[2,1,1],[0,1,1],[1,0,1]] },
+  single:    { name: '[[2]] · 空转不计分钟', grid: [[2]] },
+  custom:    { name: '自定义 · 点击格子编辑', grid: [[0,2],[1,1]] },
+};
+
+const DIRS = [[-1,0],[0,1],[1,0],[0,-1]];
+
+/* ================= 轨迹生成 ================= */
+/* mode: 'multi' 全部 2 入队 | 'first' 只入队第一个 2（单源对照） */
+function buildTrace(grid0, mode) {
+  const grid = grid0.map(r => r.slice());
+  const m = grid.length, n = grid[0].length;
+  let fresh = 0;
+  const sources = [];
+  for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) {
+    if (grid[i][j] === 1) fresh++;
+    if (grid[i][j] === 2) sources.push([i, j]);
+  }
+  const queue = (mode === 'first' ? sources.slice(0, 1) : sources.slice()).map(p => [p[0], p[1], 1]); // 第三位 = 层号(第 1 轮 while 处理)
+  // 对照模式: 不入队的源在网格里仍是 2, 但没有队列成员资格(死源), 不会被再次处理 —— 与真实错误完全一致
+  const frames = [];
+  let minute = 0, totalInfected = 0;
+  const totalFresh = fresh;
+
+  const snap = (extra) => ({
+    grid: grid.map(r => r.slice()),
+    queue: queue.map(([r,c,layer]) => [r,c,layer]),
+    fresh, minute, ...extra
+  });
+
+  frames.push(snap({
+    type: 'init', line: 1,
+    log: { cls: 'layermark', text: `初始化: ${queue.length} 个腐烂源入队 [${queue.map(p => '('+p[0]+','+p[1]+')').join(', ')}] —— 它们共同构成第 0 层` }
+  }));
+
+  let layerNo = 0;
+  while (queue.length > 0) {
+    const snapshot = queue.length;      // 层快照: for range len(queue)
+    frames.push(snap({ type: 'layerBegin', line: 4, layerNo: layerNo + 1, snapshot,
+      log: { cls: 'layermark', text: `── 第 ${layerNo + 1} 层开始: 层快照 = ${snapshot} 个元素 ${snapshot>1?'(同层并行处理)':''} ──` } }));
+    let rotted = false, infectedThisLayer = 0;
+
+    for (let k = 0; k < snapshot; k++) {
+      const [r, c] = queue.shift();
+      frames.push(snap({ type: 'dequeue', line: 7, cur: [r, c], layerNo: layerNo + 1, infectedThisLayer,
+        log: { cls: '', text: `第 ${minute} 分钟 · 出队 (${r},${c})` } }));
+      for (const [dr, dc] of DIRS) {
+        const r1 = r + dr, c1 = c + dc;
+        if (r1 < 0 || c1 < 0 || r1 >= m || c1 >= n) continue;
+        if (grid[r1][c1] !== 1) continue;
+        grid[r1][c1] = 2;
+        queue.push([r1, c1, layerNo + 2]); // 本轮(layerNo+1)感染, 下一轮才处理 → 层号 +2
+        fresh--; totalInfected++; rotted = true; infectedThisLayer++;
+        frames.push(snap({ type: 'infect', line: 11, from: [r, c], infected: [r1, c1], layerNo: layerNo + 1, infectedThisLayer,
+          log: { cls: 'infectline', text: `  感染 (${r},${c}) → (${r1},${c1})  新鲜剩 ${fresh}  ·  (${r1},${c1}) 入队接棒` } }));
+      }
+    }
+
+    if (rotted) {
+      minute++;
+      frames.push(snap({ type: 'layerEnd', line: 14, layerNo: layerNo + 1, infectedThisLayer,
+        log: { cls: 'layermark', text: `── 第 ${layerNo + 1} 层结束: 本轮感染 ${infectedThisLayer} 个 → minute = ${minute} ──` } }));
+    } else {
+      frames.push(snap({ type: 'layerEnd', line: 13, layerNo: layerNo + 1, infectedThisLayer: 0,
+        log: { cls: 'idleline', text: `── 第 ${layerNo + 1} 层结束: 队列清空轮, 无任何感染 → 不计时, minute 保持 ${minute} ──` } }));
+    }
+    layerNo++;
+  }
+
+  const reachable = fresh === 0;
+  frames.push(snap({
+    type: 'finish', line: 15, result: reachable ? minute : -1,
+    log: reachable
+      ? { cls: 'finishline ok', text: `结束: 对账 感染总数 ${totalInfected} / 初始新鲜 ${totalFresh} → 全部腐烂, 答案 = ${minute}` }
+      : { cls: 'finishline bad', text: `结束: 对账后仍剩 ${fresh} 个新鲜橘子(不可达) → 答案 = -1` }
+  }));
+  return frames;
+}
+
+/* ================= 伪代码 ================= */
+const CODE = [
+  ['1',  'queue ← 所有初始为 2 的格子     <span class="cm">← 多源: 与单源唯一的区别就在这一行</span>'],
+  ['2',  'minute ← 0'],
+  ['3',  'while queue 非空:'],
+  ['4',  '    snapshot ← len(queue)          <span class="cm">← 层快照 for range len(queue)</span>'],
+  ['5',  '    rotted ← false'],
+  ['6',  '    重复 snapshot 次:              <span class="cm">← 本层全体, 逐个出队</span>'],
+  ['7',  '        (r,c) ← 出队'],
+  ['8',  '        for (r,c) 的四邻 (r1,c1):'],
+  ['9',  '            if grid[r1][c1] == 1:'],
+  ['10', '                grid[r1][c1] ← 2'],
+  ['11', '                (r1,c1) 入队          <span class="cm">← 新腐烂者接棒, 下一层由它扩散</span>'],
+  ['12', '                rotted ← true'],
+  ['13', '    if !rotted: 跳过计时            <span class="cm">← 队列清空轮, 分钟不存在</span>'],
+  ['14', '    minute += 1                     <span class="cm">← 本轮真的感染了橘子才计时</span>'],
+  ['15', 'if 网格中还有 1: return -1          <span class="cm">← 对账: 可达性检查</span>'],
+  ['16', 'return minute'],
+];
+
+/* ================= 播放器 ================= */
+let gridBase = PRESETS.official1.grid.map(r => r.slice());
+let traceMain = [], traceContrast = null;
+let frameIdx = 0, playing = false, timer = null;
+let editMode = false;
+
+const $ = id => document.getElementById(id);
+
+function initPresetSelect() {
+  const sel = $('preset');
+  for (const [k, v] of Object.entries(PRESETS)) {
+    const o = document.createElement('option');
+    o.value = k; o.textContent = v.name;
+    sel.appendChild(o);
+  }
+  sel.value = 'official1';
+  sel.onchange = () => loadPreset(sel.value);
+}
+
+function loadPreset(key) {
+  gridBase = PRESETS[key].grid.map(r => r.slice());
+  resetAll();
+}
+
+function resetAll() {
+  traceMain = buildTrace(gridBase, 'multi');
+  traceContrast = isContrastOn() ? buildTrace(gridBase, 'first') : null;
+  frameIdx = 0; stopPlay();
+  buildGridDOM($('gridMain'), gridBase);
+  if (traceContrast) buildGridDOM($('gridContrast'), gridBase);
+  $('log').innerHTML = '';
+  renderFrame();
+}
+
+function isContrastOn() { return $('btnContrast').textContent.includes('开'); }
+
+function buildGridDOM(el, grid) {
+  const m = grid.length, n = grid[0].length;
+  el.innerHTML = '';
+  el.style.gridTemplateColumns = `repeat(${n}, 46px)`;
+  for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.dataset.r = i; cell.dataset.c = j;
+    cell.innerHTML = `<div class="fruit"></div><span class="coord">${i},${j}</span>`;
+    cell.onclick = () => { if (editMode) { cycleCell(i, j); } };
+    el.appendChild(cell);
+  }
+}
+
+function cycleCell(i, j) {
+  gridBase[i][j] = (gridBase[i][j] + 1) % 3;
+  resetAll();
+}
+
+function renderFrame() {
+  renderTrace($('gridMain'), $('queueStrip'), $('minuteMain'), $('freshMain'), $('resultMain'), traceMain, Math.min(frameIdx, traceMain.length - 1));
+  if (traceContrast) {
+    renderTrace($('gridContrast'), null, $('minuteContrast'), $('freshContrast'), $('resultContrast'), traceContrast, Math.min(frameIdx, traceContrast.length - 1));
+  }
+  const f = traceMain[Math.min(frameIdx, traceMain.length - 1)];
+  // 代码高亮
+  document.querySelectorAll('#code .ln').forEach((ln, i) => {
+    ln.classList.remove('hl', 'key');
+    if (f.line === i + 1) ln.classList.add(f.type === 'infect' ? 'key' : 'hl');
+  });
+  // 队列注释
+  const note = $('queueNote');
+  if (f.type === 'init') note.textContent = '初始化：所有值为 2 的格子同时入队——它们共同构成「第 0 层」。';
+  else if (f.type === 'layerBegin') note.textContent = `第 ${f.layerNo} 层：色块分组 = 层快照(${f.snapshot} 个)，竖线左侧本层将逐个出队。`;
+  else if (f.type === 'layerEnd' && f.infectedThisLayer === 0) note.textContent = '队列清空轮：没有任何感染发生，这一分钟不存在（rotted = false）。';
+  else if (f.type === 'infect') note.textContent = `新腐烂的 (${f.infected[0]},${f.infected[1]}) 追加到队尾——它属于下一层，本层不会处理它。`;
+  else note.textContent = '';
+  // 徽章
+  const rb = $('rotBadgeMain');
+  const cf = traceMain[Math.min(frameIdx, traceMain.length - 1)];
+  rb.textContent = `本轮感染 ${cf.infectedThisLayer ?? 0}`;
+  rb.className = 'badge ' + (cf.infectedThisLayer > 0 ? 'rot' : 'idle');
+  // 日志增量
+  appendLogs(frameIdx);
+}
+
+function renderTrace(gridEl, queueEl, minuteEl, freshEl, resultEl, trace, idx) {
+  const f = trace[idx];
+  const cells = gridEl.children;
+  const m = f.grid.length, n = f.grid[0].length;
+  for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) {
+    const cell = cells[i * n + j];
+    cell.className = 'cell' + (f.grid[i][j] === 1 ? ' fresh' : f.grid[i][j] === 2 ? ' rot' : '');
+    if (f.cur && f.cur[0] === i && f.cur[1] === j) cell.classList.add('cur');
+    if (f.infected && f.infected[0] === i && f.infected[1] === j) cell.classList.add('justInfected');
+  }
+  minuteEl.textContent = f.minute;
+  freshEl.textContent = `新鲜 ${f.fresh}`;
+  if (f.type === 'finish') {
+    resultEl.textContent = f.result === -1 ? '答案 -1（不可达）' : `答案 ${f.result} 分钟`;
+    resultEl.className = 'result ' + (f.result === -1 ? 'bad' : 'ok');
+  } else resultEl.textContent = '';
+
+  if (queueEl) renderQueue(queueEl, f, idx);
+}
+
+function renderQueue(el, f, idx) {
+  el.innerHTML = '';
+  if (!f.queue || f.queue.length === 0) {
+    el.innerHTML = '<span class="q-empty">队列空</span>';
+    return;
+  }
+  // 重建层分组: 用「队列中第几个元素曾在哪层入队」不可靠, 改用帧里记录的 layer 信息
+  // 简化: 同层元素在生成时顺序连续, 通过对比 trace 找层边界
+  const groups = [];
+  let g = null;
+  for (const it of f.queue) {
+    if (!g || g.layer !== it[2]) { g = { layer: it[2], items: [] }; groups.push(g); }
+    g.items.push(it);
+  }
+  const newest = f.infected ? f.queue[f.queue.length - 1] : null;
+  groups.forEach(grp => {
+    const wrap = document.createElement('div');
+    wrap.className = 'q-group';
+    const tag = document.createElement('div');
+    tag.className = 'grouptag';
+    tag.textContent = '层' + (grp.layer ?? '?');
+    wrap.appendChild(tag);
+    grp.items.forEach(it => {
+      const d = document.createElement('div');
+      d.className = 'q-item';
+      d.textContent = `${it[0]},${it[1]}`;
+      if (f.cur && f.cur[0] === it[0] && f.cur[1] === it[1] && !f.infected) d.classList.add('head');
+      if (newest && newest[0] === it[0] && newest[1] === it[1] && f.infected) d.classList.add('newest');
+      wrap.appendChild(d);
+    });
+    el.appendChild(wrap);
+  });
+}
+
+/* 队列元素的层标注: 在 buildTrace 里入队时带上层号 */
+/* (buildTrace 已在 push 时写入第三位, 见下) */
+
+let logRendered = -1;
+function appendLogs(curIdx) {
+  const log = $('log');
+  if (curIdx < logRendered) { log.innerHTML = ''; logRendered = -1; }
+  const src = traceMain;
+  const upto = Math.min(curIdx, src.length - 1);
+  for (let i = logRendered + 1; i <= upto; i++) {
+    const d = document.createElement('div');
+    d.className = src[i].log.cls;
+    d.textContent = src[i].log.text;
+    log.appendChild(d);
+  }
+  logRendered = upto;
+  log.scrollTop = log.scrollHeight;
+}
+
+/* ---- 播放控制 ---- */
+function speedMs() { return 1150 - $('speed').value * 105; }
+function startPlay() {
+  if (frameIdx >= traceMain.length - 1) frameIdx = 0;
+  playing = true; $('btnPlay').textContent = '暂停';
+  timer = setInterval(() => {
+    if (frameIdx >= traceMain.length - 1) { stopPlay(); return; }
+    frameIdx++; renderFrame();
+  }, speedMs());
+}
+function stopPlay() {
+  playing = false; $('btnPlay').textContent = '播放';
+  if (timer) { clearInterval(timer); timer = null; }
+}
+$('btnPlay').onclick = () => playing ? stopPlay() : startPlay();
+$('btnStep').onclick = () => {
+  stopPlay();
+  if (frameIdx < traceMain.length - 1) { frameIdx++; renderFrame(); }
+};
+$('btnReset').onclick = () => { logRendered = -1; resetAll(); };
+$('speed').oninput = () => { if (playing) { stopPlay(); startPlay(); } };
+$('btnEdit').onclick = () => {
+  editMode = !editMode;
+  $('btnEdit').classList.toggle('toggle-edit', editMode);
+  $('btnEdit').textContent = editMode ? '编辑中(点格子)' : '编辑网格';
+};
+$('btnContrast').onclick = () => {
+  const on = !isContrastOn();
+  $('btnContrast').textContent = on ? '单源对照: 开' : '单源对照: 关';
+  $('boardContrast').style.display = on ? '' : 'none';
+  logRendered = -1; resetAll();
+};
+
+/* ---- 伪代码渲染 ---- */
+function renderCode() {
+  const el = $('code');
+  el.innerHTML = '';
+  CODE.forEach(([no, text]) => {
+    const d = document.createElement('div');
+    d.className = 'ln';
+    d.innerHTML = `<span class="no">${no}</span><span>${text}</span>`;
+    el.appendChild(d);
+  });
+}
+
+/* ---- 论证 tabs ---- */
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tabbody > div').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    $(b.dataset.tab).classList.add('active');
+  };
+});
+
+/* ---- 启动 ---- */
+/* 给队列元素补层号: 重写 buildTrace 内的 push 逻辑已在上面通过第三元素实现 */
+initPresetSelect();
+renderCode();
+resetAll();
+</script>
+</body>
+</html>

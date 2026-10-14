@@ -39,6 +39,7 @@ MAIN_FUNC = {
     '1011': 'Transmite',
     '0378': 'SearchMatrixSearchWay',
     # 多解法/命名不规则的单题文件
+    '0049': 'GroupAnagrams',
     '0015': 'ThreeSum',
     '0019': 'RemoveNthFromEnd',
     '0128': 'LongestConsecutive',
@@ -59,6 +60,47 @@ MAIN_FUNC = {
     '0124': 'MaxPathSum',
     '0994': 'OrangesRotting',
     '0127': 'LadderLength',
+    # 测试先行题(未做, 桩 + 红测试等着实现; 反向检测依赖这些映射提示打钩)
+    '0042': 'Trap',
+    '0084': 'LargestRectangleArea',
+    '0143': 'ReorderList',
+    '0025': 'ReverseKGroup',
+    '0105': 'BuildTree',
+    '0337': 'RobIII',
+    '0022': 'GenerateParenthesis',
+    '0077': 'Combine',
+    '0078': 'Subsets',
+    '0079': 'Exist',
+    '0131': 'Partition',
+    '0051': 'SolveNQueens',
+    '0053': 'MaxSubArray',
+    '0062': 'UniquePaths',
+    '0064': 'MinPathSum',
+    '0139': 'WordBreak',
+    '0152': 'MaxProduct',
+    '0198': 'Rob',
+    '0213': 'RobII',
+    '0070': 'ClimbStairs',
+    '0118': 'Generate',
+    '0072': 'MinDistance',
+    '0300': 'LengthOfLIS',
+    '0322': 'CoinChange',
+    '0416': 'CanPartition',
+    '0494': 'FindTargetSumWays',
+    '0518': 'Change',
+    '1143': 'LongestCommonSubsequence',
+    '0032': 'LongestValidParentheses',
+    '0045': 'Jump',
+    '0055': 'CanJump',
+    '0122': 'MaxProfitII',
+    '0134': 'CanCompleteCircuit',
+    '0452': 'FindMinArrowShots',
+    '0763': 'PartitionLabels',
+    '0054': 'SpiralOrder',
+    '0073': 'SetZeroes',
+    '0048': 'Rotate',
+    '1526': 'MinNumberOperations',
+    '0410': 'SplitArray',
 }
 
 def read_index():
@@ -191,15 +233,19 @@ def main():
     print("运行测试...")
     print("="*70)
     failed_tests = []
+    passed_tests = set()
     try:
-        # -skip 精确排除挂起的 TestDetectCycle(旧写法 'Test[^D]' 会误伤 TestDeleteNode 等 D 开头测试)
-        r = subprocess.run(['go','test','./lc_tests/','-skip','^TestDetectCycle$','-timeout','120s','-v'],
+        # TestDetectCycle 挂起已修复(lc/types.go 的 String() 加防环截断), 不再需要 -skip
+        # -skip: 栈溢出(fatal 级, recover 拦不住)的测试会杀掉整个进程
+        # TestPartition(131 半成品, 无限递归) —— 待 131 写完后移除此跳过
+        r = subprocess.run(['go','test','./lc_tests/','-skip','^TestPartition$','-timeout','120s','-v'],
                           capture_output=True, text=True, timeout=150, cwd=ROOT)
         output = r.stdout + r.stderr
         passed = len(re.findall(r'^\s*--- PASS', output, re.M))
         failed = len(re.findall(r'^\s*--- FAIL', output, re.M))
         failed_tests = list(dict.fromkeys(re.findall(r'^--- FAIL: (\S+)', output, re.M)))
-        print(f"通过: {passed}  失败: {failed}  (TestDetectCycle 因挂起已跳过)")
+        passed_tests = set(re.findall(r'^--- PASS: (\S+)', output, re.M))
+        print(f"通过: {passed}  失败: {failed}")
         for ft in failed_tests: print(f"  ✗ {ft}")
     except subprocess.TimeoutExpired:
         print("⚠ 测试超时")
@@ -235,6 +281,21 @@ def main():
                 if num not in seen:
                     seen.add(num); line.append(num)
             print(f"预期红色(做错题): {', '.join(sorted(seen))}")
+
+        # 反向验证: 调用主函数的测试全部 PASS, 但 INDEX 仍标做错/未做 -> 该打钩了
+        test_calls = collect_test_calls()  # 复用已收集的调用表
+        stale = []
+        for num, fn in MAIN_FUNC.items():
+            related = [t for t, calls in test_calls.items() if fn in calls]
+            if not related: continue  # 没有任何测试锁定该题, 无法判断
+            if all(t in passed_tests for t in related):
+                st = num_status.get(num)
+                if st in ('wrong', 'todo'):
+                    stale.append((num, num_title.get(num, ''), st))
+        if stale:
+            print(f"\n⚠ 可打钩未打: 测试全绿但 INDEX 状态过时 ({len(stale)} 题):")
+            for num, title, st in sorted(stale):
+                print(f"  {num} {title} 当前={st} -> 应为已完成")
 
     print(f"\n{'='*70}")
     print(f"总结: {done-subopt} 最优 / {subopt} 非最优 / {wrong} 做错 / {todo} 未做 / 共 {len(stats)}")

@@ -48,28 +48,42 @@ func OrangesRotting(grid [][]int) int {
 		{-1,0},{0,1},{1,0},{0,-1},
 	}
 	queue := make([][]int,0)
+	fresh,cnt,minites := 0,0,0
 	for i := range m {
 		for j := range n {
 			if grid[i][j] == 2 { //已腐烂,多源bfs
 				queue = append(queue,[]int{i,j})
 			}
+			if grid[i][j] == 1 {
+				fresh++
+			}
 		}
 	}
-	var cnt int
 	for len(queue) > 0 {
-		r,c := queue[0][0],queue[0][1]
-		for _,dir := range dirs {
-			r1,c1 := r + dir[0],c + dir[1]
-			if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n {
-				continue
+		var rotted bool
+		for range len(queue) {
+			r,c := queue[0][0],queue[0][1]
+			for _,dir := range dirs {
+				r1,c1 := r + dir[0],c + dir[1]
+				if r1 < 0 || c1 < 0 || r1 >= m || c1 >= n {
+					continue
+				}
+				if grid[r1][c1] != 1{ //已经腐烂或者本身就是空位
+					continue
+				}
+				queue = append(queue,[]int{r1,c1})
+				grid[r1][c1] = 2
+				cnt++
+				rotted = true
 			}
-			if grid[r1][c1] != 1{ //已经腐烂或者本身就是空位
-				continue
-			}
-			grid[r1][c1] = 2
-			cnt += 1
+			queue = queue[1:]
 		}
-		queue = queue[1:len(queue)]
+		if rotted {
+		  minites += 1
+		}
 	}
-	return cnt
+	if cnt >= fresh {
+		return minites
+	}
+	return -1
 }
