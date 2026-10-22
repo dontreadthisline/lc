@@ -37,9 +37,34 @@ func TestMaxSubArray(t *testing.T) {
 	}
 	for _, c := range cases {
 		var got int
-		runSafely(t, func() { got = lc.MaxSubArray(c.nums) })
+		runSafely(t, func() { got, _ = lc.MaxSubArray(c.nums) })
 		if got != c.want {
 			t.Errorf("MaxSubArray(%v) = %d, want %d", c.nums, got, c.want)
+		}
+	}
+}
+
+// 变式: 和最大(平局取最长)的子数组长度
+func TestMaxSubArrayLen(t *testing.T) {
+	cases := []struct {
+		nums      []int
+		wantSum   int
+		wantLen   int
+	}{
+		{[]int{-2, 1, -3, 4, -1, 2, 1, -5, 4}, 6, 4},
+		{[]int{1}, 1, 1},
+		{[]int{5, 4, -1, 7, 8}, 23, 5},
+		{[]int{-1}, -1, 1},
+		{[]int{-3, -2, -5}, -2, 1},
+		{[]int{2, -2, 2}, 2, 3},           // 平局: 和相同取长
+		{[]int{5, 6, -10, 1, 1, 1}, 11, 2}, // 和冠军是 [5,6], 不是最长的 [1,1,1]
+		{[]int{3, -1, 4, 0, 2}, 8, 5},      // 平局: [3,-1,4] 和 6 vs [3,-1,4,0,2] 和 8
+	}
+	for _, c := range cases {
+		var sum, length int
+		runSafely(t, func() { sum, length = lc.MaxSubArray(c.nums) })
+		if sum != c.wantSum || length != c.wantLen {
+			t.Errorf("MaxSubArray(%v) = (%d, %d), want (%d, %d)", c.nums, sum, length, c.wantSum, c.wantLen)
 		}
 	}
 }
@@ -53,7 +78,7 @@ func TestMaxSubArrayRandom(t *testing.T) {
 		}
 		want := refMaxSubArray(nums)
 		var got int
-		runSafely(t, func() { got = lc.MaxSubArray(nums) })
+		runSafely(t, func() { got, _ = lc.MaxSubArray(nums) })
 		if got != want {
 			t.Fatalf("MaxSubArray(%v) = %d, want %d", nums, got, want)
 		}
@@ -269,7 +294,7 @@ func TestMaxProduct(t *testing.T) {
 	}
 	for _, c := range cases {
 		var got int
-		runSafely(t, func() { got = lc.MaxProduct(c.nums) })
+		runSafely(t, func() { got, _ = lc.MaxProduct(c.nums) })
 		if got != c.want {
 			t.Errorf("MaxProduct(%v) = %d, want %d", c.nums, got, c.want)
 		}
@@ -285,7 +310,7 @@ func TestMaxProductRandom(t *testing.T) {
 		}
 		want := refMaxProduct(nums)
 		var got int
-		runSafely(t, func() { got = lc.MaxProduct(nums) })
+		runSafely(t, func() { got, _ = lc.MaxProduct(nums) })
 		if got != want {
 			t.Fatalf("MaxProduct(%v) = %d, want %d", nums, got, want)
 		}

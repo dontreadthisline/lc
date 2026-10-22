@@ -28,17 +28,13 @@ package lc
 
 func Rob(nums []int) int {
 	n := len(nums)
-	dp := make([]int,n)
-	res := -1
-	for i := 0; i < n; i++ {
-		if i == 0 {
-			dp[0] = nums[0]
-		} else if i == 1 {
-			dp[1] = max(nums[0],nums[1])
+	dp := make([]int,n+1)
+	for i := 1; i <= n; i++ {
+		if i == 1 {
+			dp[1] = nums[0]
 		} else {
-			dp[i] = max(dp[i-2]+nums[i],dp[i-1])
+			dp[i] = max(dp[i-2]+nums[i-1],dp[i-1])
 		}
-		res = max(res,dp[i])
 	}
-	return res
+	return dp[n]
 }

@@ -90,10 +90,10 @@ func TestTransmite(t *testing.T) {
 }
 
 func TestEtaFuckBananas(t *testing.T) {
-	if got := lc.EtaFuckBananas([]int{3, 6, 7, 11}, 8); got != 4 {
+	if got := lc.MinEatingSpeed([]int{3, 6, 7, 11}, 8); got != 4 {
 		t.Errorf("EtaFuckBananas = %d, want 4", got)
 	}
-	if got := lc.EtaFuckBananas([]int{30, 11, 23, 4, 20}, 5); got != 30 {
+	if got := lc.MinEatingSpeed([]int{30, 11, 23, 4, 20}, 5); got != 30 {
 		t.Errorf("EtaFuckBananas = %d, want 30", got)
 	}
 }

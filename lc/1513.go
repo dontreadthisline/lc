@@ -40,3 +40,19 @@ package lc
 
 - `1 <= s.length <= 10^5`
 */
+//NumOfOnesSubStr 子串中1的最大个数
+
+func NumOfOnesSubStr(s string) int {
+	mod := int(1e9) + 7
+	res,n := 0,len(s)
+	for i,j := 0,0; i < n && j < n; {
+		for i = j ;i < n && s[i] != '1'; i++ {
+		}
+		for j = i; j < n && s[j] == '1'; j++ {
+		}
+		l := j - i
+		res += (l + 1) * l / 2
+		res %= mod
+	}
+	return res
+}

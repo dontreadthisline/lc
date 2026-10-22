@@ -1,6 +1,8 @@
 package lc
 
-import "math"
+import (
+	"math"
+)
 
 /*
 给你一个整数数组 nums ，请你找出一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
@@ -31,12 +33,29 @@ import "math"
 
 进阶：如果你已经实现复杂度为 O(n) 的解法，尝试使用更为精妙的 分治法 求解。
 */
-
-func MaxSubArray(nums []int) int {
-	panic("TODO")
+type item struct {
+	val int
+	length int
 }
 
-func NaviWayMaxSubArray(nums []int) int {
+func MaxSubArray(nums []int) (int,int ){
+	res,n ,resLen:= math.MinInt,len(nums),1
+	cache := make([]item,n+1)
+	for i := 1; i <=n; i++ {
+		num := nums[i-1]
+		if sum := cache[i-1].val + num; sum >= num {
+			cache[i] = item{sum,cache[i-1].length+1}
+		} else {
+			cache[i] = item{num,1}
+		}
+		if res < cache[i].val || (res == cache[i].val && resLen < cache[i].length) {
+			res,resLen = cache[i].val,cache[i].length
+		}
+	}
+	return res,resLen
+}
+
+func NavieWayMaxSubArray(nums []int) int {
 	res := math.MinInt
 	n := len(nums)
 	var sum int
@@ -70,10 +89,9 @@ func PrefixSumMaxSubArray(nums []int) int {
 
 func GreedDeltaSumMaxSubArray(nums []int) int {
 	res := math.MinInt
-	
 	return res
 }
 
 func DivideConquerMaxSubArray(nums []int) int {
-	panic("TODO") // 半成品临时补齐以便编译, 待实现
+	return 0
 }

@@ -36,18 +36,15 @@ func SubarraysDivByK(nums []int, k int) int {
 	for i := 1; i <= n; i++ {
 		prefix[i] = prefix[i-1] + nums[i-1]
 	}
+
 	r := func(x int) int {
 		return (x%k + k) % k
 	}
+
 	for j := range n {
-		/*
-			for i := j; i >= 0; i-- {
-				if prefix[j+1] % k ==  prefix[i] % k {
-					res += 1
-				}
-			}*/
 		m[r(prefix[j])] += 1
 		res += m[r(prefix[j+1])]
 	}
+
 	return res
 }

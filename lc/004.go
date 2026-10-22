@@ -456,7 +456,7 @@ func SqetIterAlgs(x float64) float64 { // 迭代法
 	 思考,值域一定[1,max(piles)]
 */
 
-func EtaFuckBananas(piles []int, h int) int {
+func MinEatingSpeed(piles []int, h int) int {
 	l, r := 1, slices.Max(piles)
 	meet := func(k int) bool {
 		sum := 0
@@ -546,6 +546,7 @@ func Transmite(weights []int, days int) int {
 		}
 		return cnt <= days
 	}
+
 	for l < r {
 		mid := l + (r-l)/2
 		if meet(mid) {

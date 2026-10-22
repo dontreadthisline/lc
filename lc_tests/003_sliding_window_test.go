@@ -303,3 +303,55 @@ func TestLongestSubstring(t *testing.T) {
 		})
 	}
 }
+
+// ---- 485. 最大连续 1 的个数(用户补充题) ----
+
+func refLongestOnesI(nums []int) int {
+	best, cur := 0, 0
+	for _, v := range nums {
+		if v == 1 {
+			cur++
+			best = max(best, cur)
+		} else {
+			cur = 0
+		}
+	}
+	return best
+}
+
+func TestLongestOnesI(t *testing.T) {
+	cases := []struct {
+		nums []int
+		want int
+	}{
+		{[]int{1, 1, 0, 1, 1, 1}, 3},
+		{[]int{1, 0}, 1},
+		{[]int{0, 1, 0}, 1},
+		{[]int{0, 0}, 0},
+		{[]int{}, 0},
+		{[]int{1}, 1},
+	}
+	for _, c := range cases {
+		var got int
+		runSafely(t, func() { got = lc.LongestOnesI(c.nums) })
+		if got != c.want {
+			t.Errorf("LongestOnesI(%v) = %d, want %d", c.nums, got, c.want)
+		}
+	}
+}
+
+func TestLongestOnesIRandom(t *testing.T) {
+	for i := 0; i < 5000; i++ {
+		n := rand.Intn(30)
+		nums := make([]int, n)
+		for j := range nums {
+			nums[j] = rand.Intn(2)
+		}
+		want := refLongestOnesI(nums)
+		var got int
+		runSafely(t, func() { got = lc.LongestOnesI(nums) })
+		if got != want {
+			t.Fatalf("LongestOnesI(%v) = %d, want %d", nums, got, want)
+		}
+	}
+}

@@ -187,6 +187,21 @@ func LongestOnes(nums []int, k int) int {
 	}
 	return res
 }
+//题面: 找出连续含有1的最长子数组 普通的双指针就可以
+//链接: https://leetcode.cn/problems/max-consecutive-ones/
+
+func LongestOnesI(nums []int) int {
+	res,n := 0,len(nums)
+	for i,j := 0,0 ; i < n && j < n; {
+		for ;i < n && nums[i] != 1; i++ {
+		}
+		for j = i; j < n && nums[j] == 1; j++ {
+		}
+		res = max(res,j - i)
+		i = j
+	}
+	return res
+}
 
 // 1493. 删掉一个元素以后全为 1 的最长子数组
 // 题面: ../mother-problems/1493-删掉一个元素以后全为1的最长子数组.md

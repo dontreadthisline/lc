@@ -35,7 +35,40 @@ package lc
 
 - wordDict 中的所有字符串 互不相同
 */
-
+//apple [apple,pen]
+//
 func WordBreak(s string, wordDict []string) bool {
-	panic("TODO")
+	return WordBreakCache(s, wordDict)
+}
+
+func WordBreakCache(s string,dict []string) bool {
+	n := len(s)
+	dp := make([]bool,n+1)
+	dp[0] = true
+	for i := 1; i <= n; i++ {
+		for _,word := range dict {
+			l := len(word)
+			if i  >= l && dp[i-l] && word == s[i-l:i] {
+				dp[i] = true
+			}
+		}
+	}
+	return dp[n]
+}
+func WordBreakBacktrack(s string, dict []string) bool {
+	n,found := len(s),false
+	var backtrack func(int)
+	backtrack = func(start int) {
+		if found || start >= n {
+			found = true
+			return
+		}
+		for _,word := range dict {
+			if start + len(word) <= n && s[start:start+len(word)] == word {
+				backtrack(start+len(word))
+			}
+		}
+	}
+	backtrack(0)
+	return found
 }

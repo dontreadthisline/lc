@@ -38,12 +38,15 @@ MAIN_FUNC = {
     '0875': 'EtaFuckBananas',
     '1011': 'Transmite',
     '0378': 'SearchMatrixSearchWay',
+    '0240': 'SearchMatrix',
     # 多解法/命名不规则的单题文件
     '0049': 'GroupAnagrams',
     '0015': 'ThreeSum',
     '0019': 'RemoveNthFromEnd',
     '0128': 'LongestConsecutive',
     '0283': 'MoveZeroes',
+    '0485': 'LongestOnesI',
+    '1513': 'NumOfOnesSubStr',
     '0992': 'GoodArrays',
     # 含辅助函数易误判
     '0046': 'Permute',            # Factorial 是辅助, 不能当完成依据
@@ -101,6 +104,30 @@ MAIN_FUNC = {
     '0048': 'Rotate',
     '1526': 'MinNumberOperations',
     '0410': 'SplitArray',
+    '1283': 'SmallestDivisor',
+    '1870': 'MinSpeedOnTime',
+    '1482': 'MinDays',
+    '2594': 'RepairCars',
+    '0475': 'FindRadius',
+    '1760': 'MinimumSize',
+    '2064': 'MinimizedMaximum',
+    '2439': 'MinimizeArrayValue',
+    '1292': 'MaxSideLength',
+    '2560': 'MinCapability',
+    '1898': 'MaximumRemovals',
+    '1802': 'MaxValue',
+    '2226': 'MaximumCandies',
+    # 家族10 扩展训练营
+    '0063': 'UniquePathsWithObstacles',
+    '0120': 'MinimumTotal',
+    '0746': 'MinCostClimbingStairs',
+    '0091': 'NumDecodings',
+    '1567': 'GetMaxLen',
+    '0978': 'MaxTurbulenceSize',
+    '0740': 'DeleteAndEarn',
+    '0309': 'MaxProfitCooldown',
+    '0718': 'FindLength',
+    '0132': 'MinCut',
 }
 
 def read_index():

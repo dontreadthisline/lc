@@ -31,5 +31,15 @@ package lc
 */
 
 func RobII(nums []int) int {
-	panic("TODO")
+	res ,n:= nums[0],len(nums)
+	dp := make([][2]int,n+1)
+	for i := 1; i <= n; i++ {
+		if i != n  {
+			dp[i][0] = max(dp[i-1][0],0)
+		} else {
+
+		}
+		res = max(res,dp[i][0],dp[i][1])
+	}
+	return res
 }

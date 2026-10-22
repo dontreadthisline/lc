@@ -53,15 +53,8 @@ func SubarraySumHashway(nums []int, k int) int {
 		prefix[i] = prefix[i-1] + nums[i-1]
 	}
 	for j := range n {
-		/*
-			  sum(i,j) = pre[j+1] - pre[i] = k => 整理有 pre[i] == pre[j+1] - k  where j in 0..n-1
-				for i := j; i >= 0; i-- {
-					if prefix[j+1]-k == prefix[i] {
-						res += 1
-					}
-				}*/
 		m[prefix[j]] += 1
-		res += m[prefix[j+1]-k]
+		res += m[prefix[j+1]-k] //注意这里是j+1 不要错误写成了j
 	}
 	return res
 }

@@ -166,3 +166,76 @@ func TestSplitArrayRandom(t *testing.T) {
 		}
 	}
 }
+
+// ---- 410 变式: 恰好 k 段, 最大化最小段和 (max-min) ----
+
+// refSplitArrayMaxMin: 位掩码枚举所有恰好 k 段分割, 取最小段和的最大值
+func refSplitArrayMaxMin(nums []int, k int) int {
+	n := len(nums)
+	best := -1 << 30
+	for mask := 0; mask < 1<<(n-1); mask++ {
+		cuts := []int{}
+		for i := 0; i < n-1; i++ {
+			if mask&(1<<i) != 0 {
+				cuts = append(cuts, i+1)
+			}
+		}
+		if len(cuts)+1 != k {
+			continue
+		}
+		minSum, prev := 1<<30, 0
+		for _, c := range append(cuts, n) {
+			s := 0
+			for _, v := range nums[prev:c] {
+				s += v
+			}
+			if s < minSum {
+				minSum = s
+			}
+			prev = c
+		}
+		if minSum > best {
+			best = minSum
+		}
+	}
+	return best
+}
+
+func TestSplitArrayMaxMin(t *testing.T) {
+	cases := []struct {
+		nums []int
+		k    int
+		want int
+	}{
+		{[]int{7, 2, 5, 10, 8}, 2, 14},  // [7,2,5][10,8] 最小段 14
+		{[]int{1, 4, 4}, 3, 1},          // 每元素一段
+		{[]int{5, 5, 5, 5}, 2, 10},      // 对半切
+		{[]int{9}, 1, 9},
+		{[]int{1, 2, 3, 4, 5}, 5, 1},    // k=n: 最小元素
+		{[]int{2, 2, 2, 2}, 3, 2},       // [2][2][2,2]
+	}
+	for _, c := range cases {
+		var got int
+		runSafely(t, func() { got = lc.SplitArrayMaxMin(c.nums, c.k) })
+		if got != c.want {
+			t.Errorf("SplitArrayMaxMin(%v, %d) = %d, want %d", c.nums, c.k, got, c.want)
+		}
+	}
+}
+
+func TestSplitArrayMaxMinRandom(t *testing.T) {
+	for i := 0; i < 500; i++ {
+		n := 1 + rand.Intn(10)
+		k := 1 + rand.Intn(n)
+		nums := make([]int, n)
+		for j := range nums {
+			nums[j] = 1 + rand.Intn(12)
+		}
+		want := refSplitArrayMaxMin(nums, k)
+		var got int
+		runSafely(t, func() { got = lc.SplitArrayMaxMin(nums, k) })
+		if got != want {
+			t.Fatalf("SplitArrayMaxMin(%v, %d) = %d, want %d(位掩枚举)", nums, k, got, want)
+		}
+	}
+}

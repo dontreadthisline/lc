@@ -51,29 +51,38 @@ numMatrix.sumRegion(1, 2, 2, 4); // return 12 (蓝色矩形框的元素总和)
 
 
 type NumMatrix struct {
-	prefixSum map[int]int
+	P [][]int
 	m         int
 	n         int
 	matrix    [][]int
 }
 
 func NewNumMatrix(matrix [][]int) *NumMatrix {
+	m,n := len(matrix),len(matrix[0])
 	nm := NumMatrix{
-		m:      len(matrix),
-		n:      len(matrix[0]),
+		m:     m,
+		n:     n,
 		matrix: matrix,
 	}
-	nm.prefixSum = make(map[int]int, nm.m*nm.n)
-	//去填充prefixSum
+	nm.P = make([][]int, m+1)
+	for i := 0; i <= m; i++ {
+		nm.P[i] = make([]int,n+1)
+	}
+	for i := 1; i <= n; i++ {
+		nm.P[0][i] = nm.P[0][i-1] + matrix[0][i-1]
+	}
+	for i := 1; i <= m; i++ {
+		nm.P[i][0] = nm.P[i-1][0] + matrix[i-1][0]
+	}
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			nm.P[i][j] = nm.P[i-1][j] + nm.P[i][j-1] + matrix[i-1][j-1]
+		}
+	}
+
 	return &nm
 }
 
 func (m *NumMatrix) SumRegion(row1 int, col1 int, row2 int, col2 int) int {
-	sum := 0
-	for i := row1; i <= row2; i++ {
-		for j := col1; j <= col2; j++ {
-			sum += m.matrix[i][j]
-		}
-	}
-	return sum
+	return 0
 }

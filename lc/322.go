@@ -33,5 +33,7 @@ package lc
 */
 
 func CoinChange(coins []int, amount int) int {
-	panic("TODO")
+	var dfs func(coins []int,amont int)
+	dfs(coins,amount)
+	return 0
 }

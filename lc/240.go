@@ -35,5 +35,17 @@ package lc
 */
 
 func SearchMatrix(matrix [][]int, target int) bool {
+	m,n := len(matrix),len(matrix[0])
+	r,c := 0,n-1
+	for r < m && c >= 0 {
+		cur := matrix[r][c]
+		if cur == target {
+			return true
+		} else if cur > target {
+			c--
+		} else {
+			r++
+		}
+	}
 	return false
 }

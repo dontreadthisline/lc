@@ -1,5 +1,9 @@
 package lc
 
+import (
+	"math"
+)
+
 /*
 给你一个整数数组 nums ，请你找出数组中乘积最大的非空连续 子数组（该子数组中至少包含一个数字），并返回该子数组所对应的乘积。
 
@@ -27,7 +31,17 @@ package lc
 
 - nums 的任何子数组的乘积都 保证 是一个 32-位 整数
 */
+func MaxProduct(nums []int) (int,int) {
+	res,n ,resLen:= math.MinInt,len(nums),0
 
-func MaxProduct(nums []int) int {
-	panic("TODO")
+	dp := make([][2]item,n+1)
+	dp[0] = [2]item{{1,0},{1,0}}
+
+	for i := 1; i <= n; i++ {
+		if num := nums[i-1]; num >= 0 {
+		} else {
+		}
+	}
+
+	return res,resLen
 }
